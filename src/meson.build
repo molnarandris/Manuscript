@@ -4,6 +4,15 @@ latexeditor_sources = [
   'window.vala',
 ]
 
+blueprints = custom_target('blueprints',
+  input: files(
+    'window.blp',
+    'shortcuts-dialog.blp',
+  ),
+  output: '.',
+  command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', '@CURRENT_SOURCE_DIR@', '@INPUT@'],
+)
+
 latexeditor_deps = [
   config_dep,
   dependency('gtk4'),
@@ -12,7 +21,8 @@ latexeditor_deps = [
 
 latexeditor_sources += gnome.compile_resources('latexeditor-resources',
   'latexeditor.gresource.xml',
-  c_name: 'latexeditor'
+  c_name: 'latexeditor',
+  dependencies: blueprints,
 )
 
 executable('latexeditor', latexeditor_sources,
