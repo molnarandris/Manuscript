@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=latexeditor
+Exec=latexeditor
+Icon=com.github.molnarandris.latexeditor
+Terminal=false
+Type=Application
+Categories=Utility;
+Keywords=GTK;
+StartupNotify=true
+DBusActivatable=true
