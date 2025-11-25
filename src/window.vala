@@ -21,7 +21,7 @@
 [GtkTemplate (ui = "/com/github/molnarandris/latexeditor/window.ui")]
 public class Latexeditor.Window : Adw.ApplicationWindow {
     [GtkChild]
-    private unowned Gtk.Label label;
+    private unowned Gtk.TextView textview;
 
     public Window (Gtk.Application app) {
         Object (application: app);
