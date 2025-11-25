@@ -3,5 +3,6 @@
   <gresource prefix="/com/github/molnarandris/latexeditor">
     <file preprocess="xml-stripblanks">window.ui</file>
     <file preprocess="xml-stripblanks">shortcuts-dialog.ui</file>
+    <file compressed="true" alias="style.css">../data/css/style.css</file>
   </gresource>
 </gresources>

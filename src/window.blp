@@ -16,7 +16,9 @@ template $LatexeditorWindow: Adw.ApplicationWindow {
                 menu-model: primary_menu;
             }
         }
-        content: Gtk.TextView textview {};
+        content: Gtk.TextView textview {
+          styles [ "latexeditor-editor", ]
+        };
     };
 }
 
