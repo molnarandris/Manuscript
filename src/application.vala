@@ -35,6 +35,7 @@ public class Latexeditor.Application : Adw.Application {
         };
         this.add_action_entries (action_entries, this);
         this.set_accels_for_action ("app.quit", {"<control>q"});
+        this.set_accels_for_action ("win.open", { "<Ctrl>o" });
     }
 
     public override void activate () {

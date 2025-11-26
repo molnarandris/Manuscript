@@ -9,6 +9,11 @@ template $LatexeditorWindow: Adw.ApplicationWindow {
     content: Adw.ToolbarView {
         [top]
         Adw.HeaderBar {
+            [start]
+            Gtk.Button {
+                label: _("Open");
+                action-name: "win.open";
+            }
             [end]
             Gtk.MenuButton {
                 primary: true;

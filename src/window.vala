@@ -26,4 +26,50 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
     public Window (Gtk.Application app) {
         Object (application: app);
     }
+
+    construct {
+        var open_action = new SimpleAction ("open", null);
+        open_action.activate.connect (this.open_file_dialog);
+        this.add_action (open_action);
+    }
+
+    private void open_file_dialog (Variant? parameter) {
+        // Create a new file selection dialog, using the "open" mode
+        // and keep a reference to it
+        var filechooser = new Gtk.FileDialog ();
+        filechooser.open.begin (this, null, (object, result) => {
+            File? file = null;
+            try {
+                file = filechooser.open.end(result);
+            } catch (Error e) {
+                stderr.printf ("Unable to select file: %s", e.message);
+                return;
+            }
+            this.open_file (file);
+        });
+    }
+
+    private void open_file (File file) {
+        file.load_contents_async.begin (null, (object, result) => {
+            uint8[] contents;
+            try {
+                file.load_contents_async.end (result, out contents, null);
+            } catch (Error e) {
+                stderr.printf ("Unable to open “%s“: %s", file.peek_path (), e.message);
+            }
+
+            if (!((string) contents).validate ()) {
+                stderr.printf ("Unable to load the contents of “%s”: "+
+                               "the file is not encoded with UTF-8\n",
+                               file.peek_path ());
+                return;
+            }
+
+            GtkSource.Buffer buffer = this.source_view.buffer as GtkSource.Buffer;
+            buffer.text = (string) contents;
+            Gtk.TextIter start;
+            buffer.get_start_iter (out start);
+            buffer.place_cursor (start);
+        });
+    }
 }
