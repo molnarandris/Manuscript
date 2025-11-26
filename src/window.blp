@@ -1,5 +1,6 @@
 using Gtk 4.0;
 using Adw 1;
+using GtkSource 5;
 
 template $LatexeditorWindow: Adw.ApplicationWindow {
     title: _("Latexeditor");
@@ -16,7 +17,7 @@ template $LatexeditorWindow: Adw.ApplicationWindow {
                 menu-model: primary_menu;
             }
         }
-        content: Gtk.TextView textview {
+        content: GtkSource.View source_view {
           wrap-mode: word_char;
           pixels-above-lines: 4;
           pixels-below-lines: 4;

@@ -17,6 +17,7 @@ latexeditor_deps = [
   config_dep,
   dependency('gtk4'),
   dependency('libadwaita-1', version: '>= 1.4'),
+  dependency('gtksourceview-5'),
 ]
 
 latexeditor_sources += gnome.compile_resources('latexeditor-resources',
