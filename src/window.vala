@@ -41,6 +41,11 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         var save_action = new SimpleAction ("save", null);
         save_action.activate.connect (this.on_save_action);
         this.add_action (save_action);
+
+        var lm = new GtkSource.LanguageManager();
+        var latex = lm.get_language ("latex");
+        var buffer = source_view.get_buffer () as GtkSource.Buffer;
+        buffer.set_language (latex);
     }
 
     private void open_file_dialog (Variant? parameter) {
