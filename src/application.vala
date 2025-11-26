@@ -36,6 +36,8 @@ public class Latexeditor.Application : Adw.Application {
         this.add_action_entries (action_entries, this);
         this.set_accels_for_action ("app.quit", {"<control>q"});
         this.set_accels_for_action ("win.open", { "<Ctrl>o" });
+        this.set_accels_for_action ("win.save-as", { "<Ctrl><Shift>s" });
+        this.set_accels_for_action ("win.save", { "<Ctrl>s" });
     }
 
     public override void activate () {

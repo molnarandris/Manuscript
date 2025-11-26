@@ -23,6 +23,8 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
     [GtkChild]
     private unowned GtkSource.View source_view;
 
+    public File? file { get; private set; default=null; }
+
     public Window (Gtk.Application app) {
         Object (application: app);
     }
@@ -31,6 +33,14 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         var open_action = new SimpleAction ("open", null);
         open_action.activate.connect (this.open_file_dialog);
         this.add_action (open_action);
+
+        var save_as_action = new SimpleAction ("save-as", null);
+        save_as_action.activate.connect (this.save_file_dialog);
+        this.add_action (save_as_action);
+
+        var save_action = new SimpleAction ("save", null);
+        save_action.activate.connect (this.on_save_action);
+        this.add_action (save_action);
     }
 
     private void open_file_dialog (Variant? parameter) {
@@ -70,6 +80,72 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
             Gtk.TextIter start;
             buffer.get_start_iter (out start);
             buffer.place_cursor (start);
+
+            this.file = file;
         });
+    }
+
+    private void save_file_dialog (Variant? parameter) {
+        var filechooser = new Gtk.FileDialog ();
+        filechooser.save.begin (this, null, (object, result) => {
+            File? file = null;
+            try {
+                file = filechooser.save.end(result);
+            } catch (Error e) {
+                stderr.printf ("Unable to select file: %s", e.message);
+                return;
+            }
+            this.save_file (file);
+        });
+    }
+
+    private void save_file (File file) {
+        GtkSource.Buffer buffer = this.source_view.buffer as GtkSource.Buffer;
+
+        Gtk.TextIter start;
+        buffer.get_start_iter (out start);
+
+        Gtk.TextIter end;
+        buffer.get_end_iter (out end);
+
+        string? text = buffer.get_text (start, end, false);
+
+        if (text == null || text.length == 0) return;
+
+        var bytes = new Bytes.take (text.data);
+
+        file.replace_contents_bytes_async.begin (bytes,
+                                                 null,
+                                                 false,
+                                                 FileCreateFlags.NONE,
+                                                 null,
+                                                 (object, result) => {
+            string display_name;
+            // Query the display name for the file
+            try {
+                FileInfo info = file.query_info ("standard::display-name",
+                                                 FileQueryInfoFlags.NONE);
+                display_name = info.get_attribute_string ("standard::display-name");
+            } catch (Error e) {
+                display_name = file.get_basename ();
+            }
+
+            try {
+                file.replace_contents_async.end (result, null);
+            } catch (Error e) {
+                stderr.printf ("Unable to save “%s”: %s\n", display_name, e.message);
+                return;
+            }
+
+            this.file = file;
+        });
+    }
+
+    private void on_save_action(Variant? parameter) {
+        if (this.file == null) {
+            this.save_file_dialog (null);
+        } else {
+            this.save_file(this.file);
+        }
     }
 }
