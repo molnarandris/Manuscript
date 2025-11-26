@@ -47,6 +47,19 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         // Create a new file selection dialog, using the "open" mode
         // and keep a reference to it
         var filechooser = new Gtk.FileDialog ();
+        var filters = new ListStore ( typeof(Gtk.FileFilter) );
+
+        var latex_filter = new Gtk.FileFilter();
+        latex_filter.add_mime_type ("text/x-tex");
+        filters.append (latex_filter);
+
+        var text_filter = new Gtk.FileFilter();
+        text_filter.add_mime_type ("text/plain");
+        filters.append (text_filter);
+
+        filechooser.set_filters (filters);
+        filechooser.set_default_filter (latex_filter);
+
         filechooser.open.begin (this, null, (object, result) => {
             File? file = null;
             try {
@@ -87,6 +100,19 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
 
     private void save_file_dialog (Variant? parameter) {
         var filechooser = new Gtk.FileDialog ();
+        var filters = new ListStore ( typeof(Gtk.FileFilter) );
+
+        var latex_filter = new Gtk.FileFilter();
+        latex_filter.add_mime_type ("text/x-tex");
+        filters.append (latex_filter);
+
+        var text_filter = new Gtk.FileFilter();
+        text_filter.add_mime_type ("text/plain");
+        filters.append (text_filter);
+
+        filechooser.set_filters (filters);
+        filechooser.set_default_filter (latex_filter);
+
         filechooser.save.begin (this, null, (object, result) => {
             File? file = null;
             try {
