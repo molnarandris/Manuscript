@@ -17,16 +17,18 @@ template $LatexeditorWindow: Adw.ApplicationWindow {
                 menu-model: primary_menu;
             }
         }
-        content: GtkSource.View source_view {
-          wrap-mode: word_char;
-          pixels-above-lines: 4;
-          pixels-below-lines: 4;
-          pixels-inside-wrap: 8;
-          left-margin: 10;
-          right-margin: 10;
-          top-margin: 6;
-          bottom-margin: 6;
-          styles [ "latexeditor-editor", ]
+        content: Gtk.ScrolledWindow {
+            GtkSource.View source_view {
+                wrap-mode: word_char;
+                pixels-above-lines: 4;
+                pixels-below-lines: 4;
+                pixels-inside-wrap: 8;
+                left-margin: 10;
+                right-margin: 10;
+                top-margin: 6;
+                bottom-margin: 6;
+                styles [ "latexeditor-editor", ]
+            }
         };
     };
 }
