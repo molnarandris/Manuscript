@@ -9,6 +9,10 @@ template $LatexeditorWindow: Adw.ApplicationWindow {
     content: Adw.ToolbarView {
         [top]
         Adw.HeaderBar {
+            title-widget: Adw.WindowTitle title {
+                title: _("New Document");
+                subtitle: _("");
+            };
             [start]
             Gtk.Button {
                 label: _("Open");

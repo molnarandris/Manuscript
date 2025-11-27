@@ -22,6 +22,8 @@
 public class Latexeditor.Window : Adw.ApplicationWindow {
     [GtkChild]
     private unowned GtkSource.View source_view;
+    [GtkChild]
+    private unowned Adw.WindowTitle title;
 
     public File? file { get; private set; default=null; }
 
@@ -79,6 +81,14 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
 
     private void open_file (File file) {
         file.load_contents_async.begin (null, (object, result) => {
+            string display_name;
+            try {
+                FileInfo? info = file.query_info ("standard::display-name", FileQueryInfoFlags.NONE);
+                display_name = info.get_attribute_string ("standard::display-name");
+            } catch (Error e) {
+                display_name = file.get_basename ();
+            }
+
             uint8[] contents;
             try {
                 file.load_contents_async.end (result, out contents, null);
@@ -100,6 +110,8 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
             buffer.place_cursor (start);
 
             this.file = file;
+            this.title.title = display_name;
+            this.title.subtitle = file.get_parent ().peek_path ();
         });
     }
 
@@ -169,6 +181,8 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
             }
 
             this.file = file;
+            this.title.title = display_name;
+            this.title.subtitle = file.get_parent ().peek_path ();
         });
     }
 
