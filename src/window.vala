@@ -81,14 +81,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
 
     private void open_file (File file) {
         file.load_contents_async.begin (null, (object, result) => {
-            string display_name;
-            try {
-                FileInfo? info = file.query_info ("standard::display-name", FileQueryInfoFlags.NONE);
-                display_name = info.get_attribute_string ("standard::display-name");
-            } catch (Error e) {
-                display_name = file.get_basename ();
-            }
-
+            string display_name = this.get_display_name (file);
             uint8[] contents;
             try {
                 file.load_contents_async.end (result, out contents, null);
@@ -142,6 +135,18 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         });
     }
 
+    private string get_display_name(File file) {
+        string display_name;
+        try {
+            FileInfo info = file.query_info ("standard::display-name",
+                                             FileQueryInfoFlags.NONE);
+            display_name = info.get_attribute_string ("standard::display-name");
+        } catch (Error e) {
+            display_name = file.get_basename ();
+        }
+        return display_name;
+    }
+
     private void save_file (File file) {
         GtkSource.Buffer buffer = this.source_view.buffer as GtkSource.Buffer;
 
@@ -163,15 +168,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
                                                  FileCreateFlags.NONE,
                                                  null,
                                                  (object, result) => {
-            string display_name;
-            // Query the display name for the file
-            try {
-                FileInfo info = file.query_info ("standard::display-name",
-                                                 FileQueryInfoFlags.NONE);
-                display_name = info.get_attribute_string ("standard::display-name");
-            } catch (Error e) {
-                display_name = file.get_basename ();
-            }
+            var display_name = this.get_display_name (file);
 
             try {
                 file.replace_contents_async.end (result, null);
