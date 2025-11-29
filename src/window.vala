@@ -44,6 +44,10 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         save_action.activate.connect (this.on_save_action);
         this.add_action (save_action);
 
+        var compile_action = new SimpleAction ("compile", null);
+        compile_action.activate.connect (this.on_compile_action);
+        this.add_action (compile_action);
+
         var lm = new GtkSource.LanguageManager();
         var latex = lm.get_language ("latex");
         var buffer = source_view.get_buffer () as GtkSource.Buffer;
@@ -189,5 +193,9 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         } else {
             this.save_file(this.file);
         }
+    }
+
+    private void on_compile_action(Variant? parameter) {
+        message("Compilation requested");
     }
 }
