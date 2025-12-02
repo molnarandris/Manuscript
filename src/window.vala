@@ -196,6 +196,23 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
     }
 
     private void on_compile_action(Variant? parameter) {
-        message("Compilation requested");
+        try{
+            string spawn_dir = this.file.get_parent ().get_path ();
+            string[] spawn_args = {"flatpak-spawn", "--host", "latexmk", "-synctex=1", "-pdf", this.file.get_path()};
+            string[] spawn_env = Environ.get ();
+            Pid child_pid;
+
+            Process.spawn_async (spawn_dir,
+                                 spawn_args,
+                                 spawn_env,
+                                 SpawnFlags.SEARCH_PATH | SpawnFlags.DO_NOT_REAP_CHILD,
+                                 null,
+                                 out child_pid);
+            ChildWatch.add (child_pid, (pid,status) => {
+                Process.close_pid (pid);
+            });
+        } catch (SpawnError e) {
+            stderr.printf ("Latexmk spawn error: %s\n", e.message);
+        }
     }
 }
