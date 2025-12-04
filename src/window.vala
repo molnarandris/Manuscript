@@ -32,8 +32,8 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
     }
 
     private ActionEntry[] actions = {
-            {"open", open_file_dialog},
-            {"save-as", save_file_dialog},
+            {"open", open_file_with_dialog},
+            {"save-as", save_file_with_dialog},
             {"save", on_save_action},
             {"compile", on_compile_action},
         };
@@ -65,7 +65,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         return filechooser;
     }
 
-    private void open_file_dialog () {
+    private void open_file_with_dialog () {
         var filechooser = this.get_file_dialog ();
         filechooser.open.begin (this, null, (object, result) => {
             File? file = null;
@@ -108,7 +108,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         });
     }
 
-    private void save_file_dialog () {
+    private void save_file_with_dialog () {
         var filechooser = this.get_file_dialog ();
         filechooser.save.begin (this, null, (object, result) => {
             File? file = null;
@@ -172,7 +172,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
 
     private void on_save_action () {
         if (this.file == null) {
-            this.save_file_dialog ();
+            this.save_file_with_dialog ();
         } else {
             this.save_file(this.file);
         }
