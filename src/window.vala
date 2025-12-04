@@ -113,7 +113,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
                 stderr.printf ("Unable to select file: %s", e.message);
                 return;
             }
-            this.save_file (file);
+            this.save_file.begin (file);
         });
     }
 
@@ -129,7 +129,8 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         return display_name;
     }
 
-    private void save_file (File file) {
+    private async void save_file (File file) {
+        var display_name = this.get_display_name (file);
         GtkSource.Buffer buffer = this.source_view.buffer as GtkSource.Buffer;
 
         Gtk.TextIter start;
@@ -144,32 +145,29 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
 
         var bytes = new Bytes.take (text.data);
 
-        file.replace_contents_bytes_async.begin (bytes,
-                                                 null,
-                                                 false,
-                                                 FileCreateFlags.NONE,
-                                                 null,
-                                                 (object, result) => {
-            var display_name = this.get_display_name (file);
+        try{
+            yield file.replace_contents_bytes_async (bytes,
+                                                     null,
+                                                     false,
+                                                     FileCreateFlags.NONE,
+                                                     null,
+                                                     null);
 
-            try {
-                file.replace_contents_async.end (result, null);
-            } catch (Error e) {
-                stderr.printf ("Unable to save “%s”: %s\n", display_name, e.message);
-                return;
-            }
+        } catch (Error e) {
+            stderr.printf ("Unable to save “%s”: %s\n", display_name, e.message);
+            return;
+        }
 
-            this.file = file;
-            this.window_title.title = display_name;
-            this.window_title.subtitle = file.get_parent ().peek_path ();
-        });
+        this.file = file;
+        this.window_title.title = display_name;
+        this.window_title.subtitle = file.get_parent ().peek_path ();
     }
 
     private void on_save_action () {
         if (this.file == null) {
             this.save_file_with_dialog ();
         } else {
-            this.save_file(this.file);
+            this.save_file.begin(this.file);
         }
     }
 
