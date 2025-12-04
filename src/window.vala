@@ -172,6 +172,17 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
     }
 
     private void on_compile_action () {
+        if (this.file == null) {
+            message ("Create new file before compilation");
+            return;
+        }
+        this.save_file.begin(this.file, (obj,res) => {
+            this.save_file.end (res);
+            this.compile ();
+        });
+    }
+
+    private void compile() {
         try{
             string spawn_dir = this.file.get_parent ().get_path ();
             string[] spawn_args = {"flatpak-spawn", "--host", "latexmk", "-synctex=1", "-pdf", this.file.get_path()};
