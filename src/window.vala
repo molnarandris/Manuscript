@@ -38,6 +38,8 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
             {"compile", on_compile_action},
         };
 
+    private Gtk.FileDialog filechooser = new Gtk.FileDialog ();
+
     construct {
         add_action_entries (actions, this);
 
@@ -45,10 +47,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         var latex = lm.get_language ("latex");
         var buffer = source_view.get_buffer () as GtkSource.Buffer;
         buffer.set_language (latex);
-    }
 
-    private Gtk.FileDialog get_file_dialog () {
-        var filechooser = new Gtk.FileDialog ();
         var filters = new ListStore ( typeof(Gtk.FileFilter) );
 
         var latex_filter = new Gtk.FileFilter();
@@ -59,15 +58,12 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         text_filter.add_mime_type ("text/plain");
         filters.append (text_filter);
 
-        filechooser.set_filters (filters);
-        filechooser.set_default_filter (latex_filter);
-
-        return filechooser;
+        this.filechooser.set_filters (filters);
+        this.filechooser.set_default_filter (latex_filter);
     }
 
     private void open_file_with_dialog () {
-        var filechooser = this.get_file_dialog ();
-        filechooser.open.begin (this, null, (object, result) => {
+        this.filechooser.open.begin (this, null, (object, result) => {
             File? file = null;
             try {
                 file = filechooser.open.end(result);
@@ -109,8 +105,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
     }
 
     private void save_file_with_dialog () {
-        var filechooser = this.get_file_dialog ();
-        filechooser.save.begin (this, null, (object, result) => {
+        this.filechooser.save.begin (this, null, (object, result) => {
             File? file = null;
             try {
                 file = filechooser.save.end(result);
