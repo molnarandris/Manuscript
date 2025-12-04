@@ -31,22 +31,15 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         Object (application: app);
     }
 
+    private ActionEntry[] actions = {
+            {"open", open_file_dialog},
+            {"save-as", save_file_dialog},
+            {"save", on_save_action},
+            {"compile", on_compile_action},
+        };
+
     construct {
-        var open_action = new SimpleAction ("open", null);
-        open_action.activate.connect (this.open_file_dialog);
-        this.add_action (open_action);
-
-        var save_as_action = new SimpleAction ("save-as", null);
-        save_as_action.activate.connect (this.save_file_dialog);
-        this.add_action (save_as_action);
-
-        var save_action = new SimpleAction ("save", null);
-        save_action.activate.connect (this.on_save_action);
-        this.add_action (save_action);
-
-        var compile_action = new SimpleAction ("compile", null);
-        compile_action.activate.connect (this.on_compile_action);
-        this.add_action (compile_action);
+        add_action_entries (actions, this);
 
         var lm = new GtkSource.LanguageManager();
         var latex = lm.get_language ("latex");
@@ -72,7 +65,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         return filechooser;
     }
 
-    private void open_file_dialog (Variant? parameter) {
+    private void open_file_dialog () {
         var filechooser = this.get_file_dialog ();
         filechooser.open.begin (this, null, (object, result) => {
             File? file = null;
@@ -115,7 +108,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         });
     }
 
-    private void save_file_dialog (Variant? parameter) {
+    private void save_file_dialog () {
         var filechooser = this.get_file_dialog ();
         filechooser.save.begin (this, null, (object, result) => {
             File? file = null;
@@ -177,15 +170,15 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         });
     }
 
-    private void on_save_action(Variant? parameter) {
+    private void on_save_action () {
         if (this.file == null) {
-            this.save_file_dialog (null);
+            this.save_file_dialog ();
         } else {
             this.save_file(this.file);
         }
     }
 
-    private void on_compile_action(Variant? parameter) {
+    private void on_compile_action () {
         try{
             string spawn_dir = this.file.get_parent ().get_path ();
             string[] spawn_args = {"flatpak-spawn", "--host", "latexmk", "-synctex=1", "-pdf", this.file.get_path()};
