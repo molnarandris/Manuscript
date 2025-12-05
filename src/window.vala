@@ -24,8 +24,11 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
     private unowned GtkSource.View source_view;
     [GtkChild]
     private unowned Adw.WindowTitle window_title;
+    [GtkChild]
+    private unowned Gtk.Button compile_button;
 
     public File? file { get; private set; default=null; }
+    private Cancellable? compile_cancellable = null;
 
     public Window (Gtk.Application app) {
         Object (application: app);
@@ -197,6 +200,15 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
     }
 
     private void compile() {
+        if (this.compile_cancellable != null) {
+            this.compile_cancellable.cancel ();
+            this.compile_cancellable = null;
+            this.compile_button.set_icon_name ("media-playback-start-symbolic");
+            return;
+        }
+        this.compile_cancellable = new Cancellable ();
+        this.compile_button.set_icon_name ("media-playback-stop-symbolic");
+
         try{
             string spawn_dir = this.file.get_parent ().get_path ();
             string[] spawn_args = {"flatpak-spawn", "--host", "latexmk", "-synctex=1", "-pdf", this.file.get_path()};
@@ -211,6 +223,8 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
                                  out child_pid);
             ChildWatch.add (child_pid, (pid,status) => {
                 Process.close_pid (pid);
+                this.compile_cancellable = null;
+                this.compile_button.set_icon_name ("media-playback-start-symbolic");
             });
         } catch (SpawnError e) {
             stderr.printf ("Latexmk spawn error: %s\n", e.message);
