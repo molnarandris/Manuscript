@@ -25,6 +25,11 @@ template $LatexeditorWindow: Adw.ApplicationWindow {
                 tooltip-text: _("Main Menu");
                 menu-model: primary_menu;
             }
+            [end]
+            Gtk.Button compile_button {
+                icon-name: "media-playback-start-symbolic";
+                action-name: "win.compile";
+            }
         }
         content: Gtk.ScrolledWindow {
             GtkSource.View source_view {
