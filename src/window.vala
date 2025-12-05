@@ -48,6 +48,15 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         var buffer = source_view.get_buffer () as GtkSource.Buffer;
         buffer.set_language (latex);
 
+        buffer.modified_changed.connect (() => {
+            var modified = buffer.get_modified ();
+            string title = this.get_display_name (this.file);
+            if (modified) {
+                title = "• " + title;
+            }
+            this.window_title.set_title(title);
+        });
+
         var filters = new ListStore ( typeof(Gtk.FileFilter) );
 
         var latex_filter = new Gtk.FileFilter();
@@ -97,6 +106,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
             Gtk.TextIter start;
             buffer.get_start_iter (out start);
             buffer.place_cursor (start);
+            buffer.set_modified (false);
 
             this.file = file;
             this.window_title.title = display_name;
@@ -117,8 +127,11 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         });
     }
 
-    private string get_display_name(File file) {
+    private string get_display_name(File? file) {
         string display_name;
+        if (file == null) {
+            return "New Document";
+        }
         try {
             FileInfo info = file.query_info ("standard::display-name",
                                              FileQueryInfoFlags.NONE);
@@ -161,6 +174,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         this.file = file;
         this.window_title.title = display_name;
         this.window_title.subtitle = file.get_parent ().peek_path ();
+        buffer.set_modified (false);
     }
 
     private void on_save_action () {
