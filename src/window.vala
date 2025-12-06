@@ -202,33 +202,45 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
     private void compile() {
         if (this.compile_cancellable != null) {
             this.compile_cancellable.cancel ();
-            this.compile_cancellable = null;
-            this.compile_button.set_icon_name ("media-playback-start-symbolic");
             return;
         }
+
+        Subprocess proc;
+        try{
+            string dir = this.file.get_parent ().get_path ();
+            // watch-bus required to cancel mklatex
+            proc = new Subprocess (SubprocessFlags.SEARCH_PATH_FROM_ENVP,
+                                   "flatpak-spawn",
+                                   "--host",
+                                   "--watch-bus",
+                                   "latexmk",
+                                   "-synctex=1",
+                                   "-pdf",
+                                   "-halt-on-error",
+                                   "-output-directory=" + dir,
+                                   this.file.get_path());
+        } catch (Error e) {
+            stderr.printf ("Latexmk spawn error: %s\n", e.message);
+            return;
+        }
+
         this.compile_cancellable = new Cancellable ();
         this.compile_button.set_icon_name ("media-playback-stop-symbolic");
 
-        try{
-            string spawn_dir = this.file.get_parent ().get_path ();
-            string[] spawn_args = {"flatpak-spawn", "--host", "latexmk", "-synctex=1", "-pdf", this.file.get_path()};
-            string[] spawn_env = Environ.get ();
-            Pid child_pid;
-
-            Process.spawn_async (spawn_dir,
-                                 spawn_args,
-                                 spawn_env,
-                                 SpawnFlags.SEARCH_PATH | SpawnFlags.DO_NOT_REAP_CHILD,
-                                 null,
-                                 out child_pid);
-            ChildWatch.add (child_pid, (pid,status) => {
-                Process.close_pid (pid);
-                this.compile_cancellable = null;
-                this.compile_button.set_icon_name ("media-playback-start-symbolic");
-            });
-        } catch (SpawnError e) {
-            stderr.printf ("Latexmk spawn error: %s\n", e.message);
-        }
+        proc.wait_check_async.begin (this.compile_cancellable, (obj,res) => {
+            try {
+                proc.wait_check_async.end (res);
+            } catch (Error e) {
+                if (e is IOError.CANCELLED) {
+                    proc.force_exit ();
+                    message("mklatex cancelled");
+                } else {
+                    message("mklatex failed");
+                }
+            }
+            this.compile_cancellable = null;
+            this.compile_button.set_icon_name ("media-playback-start-symbolic");
+        });
     }
 }
 
