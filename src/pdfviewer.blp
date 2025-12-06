@@ -9,5 +9,12 @@ template $LatexeditorPdfviewer: Widget {
                     title: _("No pdf available");
                 };
           }
+        Adw.ViewStackPage {
+            title: _("Pdf");
+            child: Gtk.ScrolledWindow {
+                Gtk.Box box {
+                }
+            };
+        }
     }
 }
