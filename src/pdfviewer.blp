@@ -1,4 +1,13 @@
 using Gtk 4.0;
+using Adw 1;
 
 template $LatexeditorPdfviewer: Widget {
+    Adw.ViewStack {
+        Adw.ViewStackPage {
+            title: _("Empty");
+                child: Adw.StatusPage {
+                    title: _("No pdf available");
+                };
+          }
+    }
 }

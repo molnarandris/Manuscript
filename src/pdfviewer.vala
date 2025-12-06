@@ -5,5 +5,7 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
     }
 
     construct {
+        var layout_manager = new Gtk.BinLayout ();
+        this.set_layout_manager (layout_manager);
     }
 }

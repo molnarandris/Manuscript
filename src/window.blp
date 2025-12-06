@@ -45,7 +45,8 @@ template $LatexeditorWindow: Adw.ApplicationWindow {
                     styles [ "latexeditor-editor", ]
                 }
             };
-            end-child: Gtk.ScrolledWindow {
+            end-child: $LatexeditorPdfviewer pdfviewer {
+
             };
         };
     };

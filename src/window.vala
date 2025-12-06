@@ -26,6 +26,8 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
     private unowned Adw.WindowTitle window_title;
     [GtkChild]
     private unowned Gtk.Button compile_button;
+    [GtkChild]
+    private unowned Latexeditor.Pdfviewer pdfviewer;
 
     public File? file { get; private set; default=null; }
     private Cancellable? compile_cancellable = null;
