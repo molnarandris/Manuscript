@@ -31,18 +31,22 @@ template $LatexeditorWindow: Adw.ApplicationWindow {
                 action-name: "win.compile";
             }
         }
-        content: Gtk.ScrolledWindow {
-            GtkSource.View source_view {
-                wrap-mode: word_char;
-                pixels-above-lines: 4;
-                pixels-below-lines: 4;
-                pixels-inside-wrap: 8;
-                left-margin: 10;
-                right-margin: 10;
-                top-margin: 6;
-                bottom-margin: 6;
-                styles [ "latexeditor-editor", ]
-            }
+        content: Paned {
+            start-child: Gtk.ScrolledWindow {
+                GtkSource.View source_view {
+                    wrap-mode: word_char;
+                    pixels-above-lines: 4;
+                    pixels-below-lines: 4;
+                    pixels-inside-wrap: 8;
+                    left-margin: 10;
+                    right-margin: 10;
+                    top-margin: 6;
+                    bottom-margin: 6;
+                    styles [ "latexeditor-editor", ]
+                }
+            };
+            end-child: Gtk.ScrolledWindow {
+            };
         };
     };
 }
