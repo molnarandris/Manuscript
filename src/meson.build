@@ -20,6 +20,7 @@ latexeditor_deps = [
   dependency('gtk4'),
   dependency('libadwaita-1', version: '>= 1.4'),
   dependency('gtksourceview-5'),
+  dependency('poppler-glib'),
 ]
 
 latexeditor_sources += gnome.compile_resources('latexeditor-resources',

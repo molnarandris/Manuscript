@@ -116,6 +116,8 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
             this.file = file;
             this.window_title.title = display_name;
             this.window_title.subtitle = file.get_parent ().peek_path ();
+            string filename = this.file.peek_path().replace(".tex", ".pdf");
+            this.pdfviewer.set_file("file://" + filename);
         });
     }
 
