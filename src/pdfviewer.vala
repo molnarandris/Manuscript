@@ -31,7 +31,7 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
 
         for (int i =0; i< doc.get_n_pages(); i++) {
             message("%d", i);
-            var page = new Latexeditor.Pdfpage ();
+            var page = new Latexeditor.Pdfpage (doc.get_page (i));
             this.box.append(page);
         }
         this.stack.set_visible_child_name("pdf");
@@ -40,7 +40,14 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
 
 private class Latexeditor.Pdfpage : Gtk.Widget {
 
+    private Poppler.Page page { get; set; }
+
+    public Pdfpage (Poppler.Page page) {
+        this.page = page;
+    }
+
     construct {
+
     }
 
     protected override Gtk.SizeRequestMode get_request_mode() {
