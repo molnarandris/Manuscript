@@ -44,6 +44,7 @@ private class Latexeditor.Pdfpage : Gtk.Widget {
 
     public Pdfpage (Poppler.Page page) {
         this.page = page;
+
     }
 
     construct {
@@ -62,19 +63,25 @@ private class Latexeditor.Pdfpage : Gtk.Widget {
                                      out int natural_baseline)  {
         minimum_baseline = -1;
         natural_baseline = -1;
+        double w, h;
+        page.get_size (out w, out h);
         if (orientation == Gtk.Orientation.HORIZONTAL) {
-            minimum = 20;
-            natural = 20;
+            minimum = (int) w;
+            natural = (int) w;
         } else {
-            minimum = 20;
-            natural = 20;
+            minimum = (int) h;
+            natural = (int) h;
         }
     }
 
     protected override void snapshot (Gtk.Snapshot snapshot) {
         Gdk.RGBA color =  { 1.0f, 1.0f, 1.0f, 1.0f };
+        double w, h;
+        page.get_size (out w, out h);
         var rect = Graphene.Rect ();
-        rect.init(0, 0, 20, 20);
+        rect.init(0, 0, (int) w, (int) h);
         snapshot.append_color (color, rect);
+        var ctx = snapshot.append_cairo (rect);
+        page.render(ctx);
     }
 }
