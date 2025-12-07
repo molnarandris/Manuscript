@@ -2,17 +2,22 @@ using Gtk 4.0;
 using Adw 1;
 
 template $LatexeditorPdfviewer: Widget {
-    Adw.ViewStack {
+    Adw.ViewStack stack {
         Adw.ViewStackPage {
             title: _("Empty");
-                child: Adw.StatusPage {
-                    title: _("No pdf available");
-                };
+            name: "empty";
+            child: Adw.StatusPage {
+                title: _("No pdf available");
+            };
           }
         Adw.ViewStackPage {
             title: _("Pdf");
+            name: "pdf";
             child: Gtk.ScrolledWindow {
                 Gtk.Box box {
+                  orientation: vertical;
+                  spacing: 5;
+                  halign: center;
                 }
             };
         }
