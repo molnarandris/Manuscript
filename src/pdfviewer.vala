@@ -4,9 +4,13 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
     private unowned Gtk.Box box;
     [GtkChild]
     private unowned Adw.ViewStack stack;
+    [GtkChild]
+    private unowned Gtk.ScrolledWindow scroll;
 
     private double scale = 1.4;
     private double zoom_tmp = 1;
+    private double hadj = 0;
+    private double vadj = 0;
 
     construct {
         var layout_manager = new Gtk.BinLayout ();
@@ -44,10 +48,14 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
     }
 
     public void on_zoom_start (Gdk.EventSequence? sequence) {
+        this.hadj = this.scroll.get_hadjustment ().get_value ();
+        this.vadj = this.scroll.get_vadjustment ().get_value ();
     }
 
     public void on_zoom_end (Gdk.EventSequence? sequence) {
         this.scale *= this.zoom_tmp;
+        this.hadj = this.scroll.get_hadjustment ().get_value ();
+        this.vadj = this.scroll.get_vadjustment ().get_value ();
     }
 
     public void on_zoom_change (double scale) {
@@ -59,6 +67,8 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
             child.queue_draw ();
             child = child.get_next_sibling () as Latexeditor.Pdfpage;
         }
+        this.scroll.get_hadjustment ().set_value (this.hadj*scale);
+        this.scroll.get_vadjustment ().set_value (this.vadj*scale);
     }
 }
 
