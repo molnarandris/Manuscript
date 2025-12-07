@@ -5,10 +5,17 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
     [GtkChild]
     private unowned Adw.ViewStack stack;
 
+    private double scale = 1.4;
+    private double zoom_tmp = 1;
+
     construct {
         var layout_manager = new Gtk.BinLayout ();
         this.set_layout_manager (layout_manager);
-
+        var controller = new Gtk.GestureZoom ();
+        controller.begin.connect(this.on_zoom_start);
+        controller.end.connect(this.on_zoom_end);
+        controller.scale_changed.connect(this.on_zoom_change);
+        this.add_controller (controller);
     }
 
     public void set_file (string uri) {
@@ -35,12 +42,30 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
         }
         this.stack.set_visible_child_name("pdf");
     }
+
+    public void on_zoom_start (Gdk.EventSequence? sequence) {
+    }
+
+    public void on_zoom_end (Gdk.EventSequence? sequence) {
+        this.scale *= this.zoom_tmp;
+    }
+
+    public void on_zoom_change (double scale) {
+        this.zoom_tmp = scale;
+        var child = box.get_first_child () as Latexeditor.Pdfpage;
+        while (child!=null) {
+            child.scale = this.scale*scale;
+            child.queue_resize ();
+            child.queue_draw ();
+            child = child.get_next_sibling () as Latexeditor.Pdfpage;
+        }
+    }
 }
 
 private class Latexeditor.Pdfpage : Gtk.Widget {
 
     private Poppler.Page page { get; set; }
-    private double scale { get; set; }
+    public double scale { get; set; }
 
     public Pdfpage (Poppler.Page page) {
         this.page = page;
