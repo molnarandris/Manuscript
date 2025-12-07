@@ -244,6 +244,8 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
             }
             this.compile_cancellable = null;
             this.compile_button.set_icon_name ("media-playback-start-symbolic");
+            string filename = this.file.peek_path().replace(".tex", ".pdf");
+            this.pdfviewer.set_file("file://" + filename);
         });
     }
 }
