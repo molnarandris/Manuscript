@@ -12,18 +12,21 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
     }
 
     public void set_file (string uri) {
-        Poppler.Document doc;
-        try {
-            doc = new Poppler.Document.from_file (uri, null);
-        } catch (Error e) {
-            stderr.printf ("Can't open the pdf: %s: %s", uri, e.message);
-            return;
-        }
+
         Gtk.Widget? child = null;
         child = box.get_first_child () as Gtk.Widget;
         while (child!=null) {
             box.remove(child);
             child = box.get_first_child () as Gtk.Widget;
+        }
+
+        Poppler.Document doc;
+        try {
+            doc = new Poppler.Document.from_file (uri, null);
+        } catch (Error e) {
+            stderr.printf ("Can't open the pdf: %s: %s", uri, e.message);
+            stack.set_visible_child_name("empty");
+            return;
         }
 
         for (int i =0; i< doc.get_n_pages(); i++) {
