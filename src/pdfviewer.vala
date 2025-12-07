@@ -30,7 +30,6 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
         }
 
         for (int i =0; i< doc.get_n_pages(); i++) {
-            message("%d", i);
             var page = new Latexeditor.Pdfpage (doc.get_page (i));
             this.box.append(page);
         }
