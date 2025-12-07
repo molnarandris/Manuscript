@@ -40,6 +40,7 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
 private class Latexeditor.Pdfpage : Gtk.Widget {
 
     private Poppler.Page page { get; set; }
+    private double scale { get; set; }
 
     public Pdfpage (Poppler.Page page) {
         this.page = page;
@@ -47,7 +48,7 @@ private class Latexeditor.Pdfpage : Gtk.Widget {
     }
 
     construct {
-
+        scale = 1.4;
     }
 
     protected override Gtk.SizeRequestMode get_request_mode() {
@@ -65,11 +66,11 @@ private class Latexeditor.Pdfpage : Gtk.Widget {
         double w, h;
         page.get_size (out w, out h);
         if (orientation == Gtk.Orientation.HORIZONTAL) {
-            minimum = (int) w;
-            natural = (int) w;
+            minimum = (int) (w*scale);
+            natural = (int) (w*scale);
         } else {
-            minimum = (int) h;
-            natural = (int) h;
+            minimum = (int) (h*scale);
+            natural = (int) (h*scale);
         }
     }
 
@@ -78,9 +79,10 @@ private class Latexeditor.Pdfpage : Gtk.Widget {
         double w, h;
         page.get_size (out w, out h);
         var rect = Graphene.Rect ();
-        rect.init(0, 0, (int) w, (int) h);
+        rect.init(0, 0, (int) (w*scale), (int) (h*scale));
         snapshot.append_color (color, rect);
         var ctx = snapshot.append_cairo (rect);
+        ctx.scale(scale, scale);
         page.render(ctx);
     }
 }
