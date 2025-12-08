@@ -70,12 +70,13 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
 
     public void on_zoom_change (double scale) {
         this.zoom_tmp = scale;
-        var child = box.get_first_child () as Latexeditor.Pdfpage;
-        while (child!=null) {
-            child.scale = this.scale*scale;
-            child.queue_resize ();
-            child.queue_draw ();
-            child = child.get_next_sibling () as Latexeditor.Pdfpage;
+        var overlay = box.get_first_child () as Gtk.Overlay;
+        while (overlay!=null) {
+            var page = overlay.get_child() as Latexeditor.Pdfpage;
+            page.scale = this.scale*scale;
+            page.queue_resize ();
+            page.queue_draw ();
+            overlay = overlay.get_next_sibling () as Gtk.Overlay;
         }
         this.scroll.get_hadjustment ().set_value (this.hadj*scale);
         this.scroll.get_vadjustment ().set_value (this.vadj*scale);
