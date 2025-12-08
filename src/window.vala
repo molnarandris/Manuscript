@@ -271,7 +271,9 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         var position = line + ":" + offset + ":" + tex_path;
         try{
             // watch-bus required to cancel
-            proc = new Subprocess (SubprocessFlags.SEARCH_PATH_FROM_ENVP,
+            proc = new Subprocess (SubprocessFlags.SEARCH_PATH_FROM_ENVP|
+                                   SubprocessFlags.STDOUT_PIPE|
+                                   SubprocessFlags.STDERR_PIPE,
                                    "flatpak-spawn",
                                    "--host",
                                    "--watch-bus",
@@ -286,14 +288,15 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
             return;
         }
 
-        proc.wait_check_async.begin (null, (obj,res) => {
+        proc.communicate_utf8_async.begin (null, null, (obj,res) => {
+            string stdout, stderr;
             try {
-                proc.wait_check_async.end (res);
+                proc.communicate_utf8_async.end (res, out stdout, out stderr);
             } catch (Error e) {
                 message("Synctex failed: %s", e.message);
                 return;
             }
-            message("Synctex success");
+            message("Synctex success:\n\n%s", stdout);
         });
 
     }
