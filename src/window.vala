@@ -256,6 +256,46 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
 
     public void synctex () {
         message("synctex called");
+        if (this.file == null) {
+            return;
+        }
+        Subprocess proc;
+        var tex_path = this.file.peek_path ();
+        var pdf_path = tex_path.replace(".tex", ".pdf");
+        var buffer = this.source_view.get_buffer ();
+        Gtk.TextIter iter;
+        var insert_mark = buffer.get_insert ();
+        buffer.get_iter_at_mark (out iter, insert_mark);
+        var line = iter.get_line ().to_string ("%i");
+        var offset = iter.get_line_offset ().to_string ("%i");
+        var position = line + ":" + offset + ":" + tex_path;
+        try{
+            // watch-bus required to cancel
+            proc = new Subprocess (SubprocessFlags.SEARCH_PATH_FROM_ENVP,
+                                   "flatpak-spawn",
+                                   "--host",
+                                   "--watch-bus",
+                                   "synctex",
+                                   "view",
+                                   "-i",
+                                   position,
+                                   "-o",
+                                   pdf_path);
+        } catch (Error e) {
+            stderr.printf ("Synctex spawn error: %s\n", e.message);
+            return;
+        }
+
+        proc.wait_check_async.begin (null, (obj,res) => {
+            try {
+                proc.wait_check_async.end (res);
+            } catch (Error e) {
+                message("Synctex failed: %s", e.message);
+                return;
+            }
+            message("Synctex success");
+        });
+
     }
 }
 
