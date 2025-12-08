@@ -296,7 +296,23 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
                 message("Synctex failed: %s", e.message);
                 return;
             }
-            message("Synctex success:\n\n%s", stdout);
+            try {
+                Regex record;
+                MatchInfo match_info;
+                record = new Regex("Page:(.*)\n.*\n.*\nh:(.*)\nv:(.*)\nW:(.*)\nH:(.*)");
+                record.match (stdout, 0, out match_info);
+                do {
+                    var p = int.parse (match_info.fetch(1));
+                    var h = float.parse(match_info.fetch(2));
+                    var v = float.parse(match_info.fetch(3));
+                    var W = float.parse(match_info.fetch(4));
+                    var H = float.parse(match_info.fetch(5));
+                    this.pdfviewer.add_synctex_rectangle (p-1, h, v, W, H);
+                } while (match_info.next ());
+            } catch (Error e) {
+                message("Regex error in synctex engine: %s", e.message);
+                return;
+            }
         });
 
     }

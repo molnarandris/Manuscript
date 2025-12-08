@@ -45,7 +45,9 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
 
         for (int i =0; i< doc.get_n_pages(); i++) {
             var page = new Latexeditor.Pdfpage (doc.get_page (i));
-            this.box.append(page);
+            var overlay = new Gtk.Overlay ();
+            overlay.set_child(page);
+            this.box.append(overlay);
         }
         this.stack.set_visible_child_name("pdf");
     }
@@ -77,6 +79,15 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
         }
         this.scroll.get_hadjustment ().set_value (this.hadj*scale);
         this.scroll.get_vadjustment ().set_value (this.vadj*scale);
+    }
+
+    public void add_synctex_rectangle(int p, float x, float y, float w, float h) {
+        var overlay = this.box.get_first_child () as Gtk.Overlay;
+        for (int i=0; i<p; i++) {
+            overlay = (Gtk.Overlay) overlay.get_next_sibling ();
+        }
+        var rect = new Latexeditor.SynctexRectangle(x,y,w,h,this.scale);
+        overlay.add_overlay(rect);
     }
 }
 
@@ -127,5 +138,52 @@ private class Latexeditor.Pdfpage : Gtk.Widget {
         var ctx = snapshot.append_cairo (rect);
         ctx.scale(scale, scale);
         page.render(ctx);
+    }
+}
+
+private class Latexeditor.SynctexRectangle : Gtk.Widget {
+
+    private Gdk.RGBA color = Gdk.RGBA ();
+    private int width;
+    private int height;
+
+    public SynctexRectangle (float x, float y, float w, float h, double scale) {
+        h += 2;
+        this.color.parse("#FFF38060");
+        this.set_halign (Gtk.Align.START);
+        this.set_valign (Gtk.Align.START);
+        this.set_margin_top((int) ((y-h+1)*scale));
+        this.set_margin_start((int) (x*scale));
+        this.width = (int) (w*scale);
+        this.height = (int) (h*scale);
+
+        Timeout.add (700, () => {
+            this.unparent ();
+            this.destroy ();
+            return false;
+        });
+    }
+
+    protected override void measure (Gtk.Orientation orientation,
+                                     int for_size,
+                                     out int minimum,
+                                     out int natural,
+                                     out int minimum_baseline,
+                                     out int natural_baseline)  {
+        minimum_baseline = -1;
+        natural_baseline = -1;
+        if (orientation == Gtk.Orientation.HORIZONTAL) {
+            minimum = this.width;
+            natural = this.width;
+        } else {
+            minimum = this.height;
+            natural = this.height;
+        }
+    }
+
+    protected override void snapshot (Gtk.Snapshot snapshot) {
+        var rect = Graphene.Rect();
+        rect.init(0, 0, this.width, this.height);
+        snapshot.append_color(this.color, rect);
     }
 }
