@@ -240,7 +240,11 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
                     message("mklatex cancelled");
                 } else {
                     message("mklatex failed");
+                    this.pdfviewer.set_error ();
                 }
+                this.compile_cancellable = null;
+                this.compile_button.set_icon_name ("media-playback-start-symbolic");
+                return;
             }
             this.compile_cancellable = null;
             this.compile_button.set_icon_name ("media-playback-start-symbolic");

@@ -22,14 +22,17 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
         this.add_controller (controller);
     }
 
-    public void set_file (string uri) {
-
+    private void remove_children () {
         Gtk.Widget? child = null;
         child = box.get_first_child () as Gtk.Widget;
         while (child!=null) {
             box.remove(child);
             child = box.get_first_child () as Gtk.Widget;
         }
+    }
+
+    public void set_file (string uri) {
+        this.remove_children ();
 
         Poppler.Document doc;
         try {
@@ -45,6 +48,11 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
             this.box.append(page);
         }
         this.stack.set_visible_child_name("pdf");
+    }
+
+    public void set_error() {
+        this.remove_children ();
+        this.stack.set_visible_child_name ("error");
     }
 
     public void on_zoom_start (Gdk.EventSequence? sequence) {
