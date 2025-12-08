@@ -39,6 +39,7 @@ public class Latexeditor.Application : Adw.Application {
         this.set_accels_for_action ("win.save-as", { "<Ctrl><Shift>s" });
         this.set_accels_for_action ("win.save", { "<Ctrl>s" });
         this.set_accels_for_action ("win.compile", { "F5" });
+        this.set_accels_for_action ("win.synctex", { "F7" });
     }
 
     public override void activate () {

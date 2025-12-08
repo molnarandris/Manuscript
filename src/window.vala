@@ -41,6 +41,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
             {"save-as", save_file_with_dialog},
             {"save", on_save_action},
             {"compile", on_compile_action},
+            {"synctex", synctex},
         };
 
     private Gtk.FileDialog filechooser = new Gtk.FileDialog ();
@@ -251,6 +252,10 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
             string filename = this.file.peek_path().replace(".tex", ".pdf");
             this.pdfviewer.set_file("file://" + filename);
         });
+    }
+
+    public void synctex () {
+        message("synctex called");
     }
 }
 
