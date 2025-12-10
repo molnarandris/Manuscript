@@ -301,6 +301,9 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
                 MatchInfo match_info;
                 record = new Regex("Page:(.*)\n.*\n.*\nh:(.*)\nv:(.*)\nW:(.*)\nH:(.*)");
                 record.match (stdout, 0, out match_info);
+                var pg = int.parse (match_info.fetch(1));
+                var y = float.parse(match_info.fetch(3));
+                this.pdfviewer.scroll_to (pg-1, y);
                 do {
                     var p = int.parse (match_info.fetch(1));
                     var h = float.parse(match_info.fetch(2));

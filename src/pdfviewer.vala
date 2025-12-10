@@ -90,6 +90,18 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
         var rect = new Latexeditor.SynctexRectangle(x,y,w,h,this.scale);
         overlay.add_overlay(rect);
     }
+
+    public void scroll_to(int p, float y) {
+        var overlay = this.box.get_first_child () as Gtk.Overlay;
+        for (int i=0; i<p; i++) {
+            overlay = (Gtk.Overlay) overlay.get_next_sibling ();
+        }
+        Graphene.Point box_point;
+        var overlay_point = Graphene.Point () {x = 0, y = y};
+        overlay.compute_point (box, overlay_point, out box_point);
+        scroll.get_vadjustment ()
+              .set_value (box_point.y - scroll.get_height()*0.3);
+    }
 }
 
 private class Latexeditor.Pdfpage : Gtk.Widget {
