@@ -3,6 +3,7 @@ latexeditor_sources = [
   'application.vala',
   'window.vala',
   'pdfviewer.vala',
+  'completion.vala',
 ]
 
 blueprints = custom_target('blueprints',
