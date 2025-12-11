@@ -54,6 +54,10 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         var buffer = source_view.get_buffer () as GtkSource.Buffer;
         buffer.set_language (latex);
 
+        var provider = new Latexeditor.CompletionProvider ();
+        var completion = this.source_view.get_completion ();
+        completion.add_provider(provider);
+
         buffer.modified_changed.connect (() => {
             var modified = buffer.get_modified ();
             string title = this.get_display_name (this.file);
