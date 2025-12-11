@@ -44,6 +44,7 @@ public class Latexeditor.Application : Adw.Application {
 
     public override void activate () {
         base.activate ();
+        GtkSource.init();
         var win = this.active_window ?? new Latexeditor.Window (this);
         win.present ();
     }
