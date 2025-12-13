@@ -56,6 +56,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
 
         var provider = new Latexeditor.CompletionProvider ();
         var completion = this.source_view.get_completion ();
+        completion.set_property ("select-on-show", true);
         completion.add_provider(provider);
 
         buffer.modified_changed.connect (() => {
