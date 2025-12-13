@@ -1,10 +1,27 @@
 public class Latexeditor.CompletionProvider: Object, GtkSource.CompletionProvider {
 
+    Gtk.FilterListModel proposals {get; set;}
+
     public CompletionProvider () {
         Object();
     }
 
     construct {
+        var file = File.new_for_path ("/app/share/completion/latex-mathsymbols.cwl");
+        uint8[] contents;
+        try {
+            file.load_contents (null, out contents, null);
+        } catch (Error e) {
+            message("Can't read completion file");
+        }
+        var lines = ((string) contents).split ("\n");
+        var store = new ListStore(typeof (CommandCompletionProposal));
+        foreach (unowned string line in lines) {
+            store.append (new CommandCompletionProposal(line));
+        }
+
+        var filter = new Gtk.CustomFilter (null);
+        proposals = new Gtk.FilterListModel (store, filter);
     }
 
 
@@ -13,7 +30,9 @@ public class Latexeditor.CompletionProvider: Object, GtkSource.CompletionProvide
         var buffer = context.get_buffer ();
         Gtk.TextIter begin, end;
         context.get_bounds (out begin, out end);
-        buffer.insert (ref end, "Hello world", -1);
+        begin.backward_char ();
+        buffer.delete(ref begin, ref end);
+        buffer.insert (ref end, proposal.get_typed_text(), -1);
     }
 
     public void display (GtkSource.CompletionContext context,
@@ -26,15 +45,26 @@ public class Latexeditor.CompletionProvider: Object, GtkSource.CompletionProvide
 
     public async ListModel populate_async (GtkSource.CompletionContext context,
                                            Cancellable? cancellable) {
-        var store = new ListStore(typeof (CommandCompletionProposal));
-        store.append( new CommandCompletionProposal ("Hello world"));
-        return store;
+        var empty_store = new ListStore(typeof (CommandCompletionProposal));
+        if (context.get_word() != "") return empty_store;
+        return proposals;
     }
 
     public void refilter (GtkSource.CompletionContext context,
                           ListModel model) {
+        var word = "\\" + context.get_word();
+        var filter = proposals.get_filter () as Gtk.CustomFilter;
+        filter.set_filter_func((item) => {
+            return ((CommandCompletionProposal) item)
+                   .get_typed_text()
+                   .has_prefix(word);
+        });
+        filter.changed(Gtk.FilterChange.DIFFERENT);
     }
 
+    public bool is_trigger (Gtk.TextIter iter, unichar ch) {
+        return ch == '\\';
+    }
 }
 
 class Latexeditor.CommandCompletionProposal: Object, GtkSource.CompletionProposal {
