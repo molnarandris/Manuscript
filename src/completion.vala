@@ -7,7 +7,16 @@ public class Latexeditor.CompletionProvider: Object, GtkSource.CompletionProvide
     }
 
     construct {
-        var file = File.new_for_path ("/app/share/completion/latex-mathsymbols.cwl");
+        var store = new ListStore(typeof (CommandCompletionProposal));
+        read_file("/app/share/completion/latex-document.cwl", store);
+        read_file("/app/share/completion/latex-mathsymbols.cwl", store);
+
+        var filter = new Gtk.CustomFilter (null);
+        proposals = new Gtk.FilterListModel (store, filter);
+    }
+
+    private void read_file(string filename, ListStore store) {
+        var file = File.new_for_path (filename);
         uint8[] contents;
         try {
             file.load_contents (null, out contents, null);
@@ -15,13 +24,9 @@ public class Latexeditor.CompletionProvider: Object, GtkSource.CompletionProvide
             message("Can't read completion file");
         }
         var lines = ((string) contents).split ("\n");
-        var store = new ListStore(typeof (CommandCompletionProposal));
         foreach (unowned string line in lines) {
             store.append (new CommandCompletionProposal(line));
         }
-
-        var filter = new Gtk.CustomFilter (null);
-        proposals = new Gtk.FilterListModel (store, filter);
     }
 
 
