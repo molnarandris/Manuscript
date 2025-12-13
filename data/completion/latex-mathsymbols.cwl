@@ -1,5 +1,3 @@
-# tex/latex mode: MathSymbols
-# dani/8.1.2004
 \acute{a}
 \aleph
 \alpha
