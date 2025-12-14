@@ -54,6 +54,10 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         var buffer = source_view.get_buffer () as GtkSource.Buffer;
         buffer.set_language (latex);
 
+        var sm = new GtkSource.StyleSchemeManager();
+        var style = sm.get_scheme("latexeditor-classic");
+        buffer.set_style_scheme(style);
+
         var provider = new Latexeditor.CompletionProvider ();
         var completion = this.source_view.get_completion ();
         completion.set_property ("select-on-show", true);

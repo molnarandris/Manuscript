@@ -45,3 +45,7 @@ configure_file(
 
 subdir('icons')
 install_subdir('completion', install_dir: get_option('datadir'))
+
+install_data([
+  'styles/latexeditor-classic.xml',
+], install_dir: get_option('datadir') / 'gtksourceview-5' / 'styles')
