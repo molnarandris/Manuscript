@@ -4,6 +4,7 @@ latexeditor_sources = [
   'window.vala',
   'pdfviewer.vala',
   'completion.vala',
+  'preferences-dialog.vala',
 ]
 
 blueprints = custom_target('blueprints',
@@ -11,6 +12,7 @@ blueprints = custom_target('blueprints',
     'window.blp',
     'shortcuts-dialog.blp',
     'pdfviewer.blp',
+    'preferences-dialog.blp',
   ),
   output: '.',
   command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', '@CURRENT_SOURCE_DIR@', '@INPUT@'],

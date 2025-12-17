@@ -65,6 +65,7 @@ public class Latexeditor.Application : Adw.Application {
     }
 
     private void on_preferences_action () {
-        message ("app.preferences action activated");
+        var dialog = new Latexeditor.PreferencesDialog();
+        dialog.present(this.active_window);
     }
 }
