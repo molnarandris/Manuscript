@@ -7,10 +7,8 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
     [GtkChild]
     private unowned Gtk.ScrolledWindow scroll;
 
-    private double scale = 1.4;
-    private double zoom_tmp = 1;
-    private double hadj = 0;
-    private double vadj = 0;
+    private double prev_zoom_gesture_scale = 1;
+    private double zoom_level = 1.4;
 
     private Gtk.EventControllerScroll scroll_controller;
 
@@ -18,20 +16,12 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
         var layout_manager = new Gtk.BinLayout ();
         this.set_layout_manager (layout_manager);
         var controller = new Gtk.GestureZoom ();
-        controller.begin.connect(this.on_zoom_start); // this is bad: the signal handler can run later than the scale_changed handler.
-        controller.end.connect(this.on_zoom_end);
-        controller.scale_changed.connect(this.on_zoom_change);
+        controller.begin.connect(this.zoom_gesture_begin_cb);
+        controller.scale_changed.connect(this.zoom_gesture_scale_changed_cb);
         this.add_controller (controller);
 
         scroll_controller = new Gtk.EventControllerScroll (Gtk.EventControllerScrollFlags.VERTICAL);
-        scroll_controller.scroll.connect(this.on_scroll);
-        // this is bad: the signal handler can run later than the scale_changed handler.
-        scroll_controller.scroll_begin.connect (() => {
-            this.on_zoom_start (null);
-        });
-        scroll_controller.scroll_end.connect (() => {
-            this.on_zoom_end (null);
-        });
+        scroll_controller.scroll.connect(this.scroll_cb);
         this.scroll.add_controller (scroll_controller);
     }
 
@@ -70,39 +60,45 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
         this.stack.set_visible_child_name ("error");
     }
 
-    public void on_zoom_start (Gdk.EventSequence? sequence) {
-        this.zoom_tmp = 1;
-        this.hadj = this.scroll.get_hadjustment ().get_value ();
-        this.vadj = this.scroll.get_vadjustment ().get_value ();
+    public void zoom_gesture_begin_cb (Gdk.EventSequence? sequence) {
+        prev_zoom_gesture_scale = 1;
     }
 
-    public void on_zoom_end (Gdk.EventSequence? sequence) {
-        this.scale *= this.zoom_tmp;
-        this.hadj = this.scroll.get_hadjustment ().get_value ();
-        this.vadj = this.scroll.get_vadjustment ().get_value ();
+    public void zoom_gesture_scale_changed_cb (double scale) {
+        var factor = scale - prev_zoom_gesture_scale + 1;
+        this.zoom(factor, 0, 0);
+        prev_zoom_gesture_scale = scale;
     }
 
-    public void on_zoom_change (double scale) {
-        this.zoom_tmp = scale;
+    /**
+     * Zooms around a given coordinate.
+     *
+     * @factor: zoom factor to apply
+     * @x: x coordinate to zoom around
+     * @y: y coordinate to zoom around
+     */
+    public void zoom (double factor, double x, double y) {
+        this.zoom_level*=factor;
+        var h = scroll.get_hadjustment ().get_value ();
+        var v = scroll.get_vadjustment ().get_value ();
         var overlay = box.get_first_child () as Gtk.Overlay;
         while (overlay!=null) {
             var page = overlay.get_child() as Latexeditor.Pdfpage;
-            page.scale = this.scale*scale;
+            page.scale = this.zoom_level;
             page.queue_resize ();
             page.queue_draw ();
             overlay = overlay.get_next_sibling () as Gtk.Overlay;
         }
-        this.scroll.get_hadjustment ().set_value (this.hadj*scale);
-        this.scroll.get_vadjustment ().set_value (this.vadj*scale);
+        this.scroll.get_hadjustment ().set_value (h*factor);
+        this.scroll.get_vadjustment ().set_value (v*factor);
     }
 
-    public bool on_scroll (double dx, double dy) {
+    public bool scroll_cb (double dx, double dy) {
         var state = scroll_controller.get_current_event ()
                                      .get_modifier_state ();
         var ctrl = (bool) (state & Gdk.ModifierType.CONTROL_MASK);
         var scale = dy>0 ? 1.05: 0.95;
-        this.zoom_tmp *= scale;
-        if (ctrl) this.on_zoom_change (this.zoom_tmp);
+        if (ctrl) this.zoom (scale, 0, 0);
         return ctrl;
     }
 
@@ -111,7 +107,7 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
         for (int i=0; i<p; i++) {
             overlay = (Gtk.Overlay) overlay.get_next_sibling ();
         }
-        var rect = new Latexeditor.SynctexRectangle(x,y,w,h,this.scale);
+        var rect = new Latexeditor.SynctexRectangle(x,y,w,h,this.zoom_level);
         overlay.add_overlay(rect);
     }
 
