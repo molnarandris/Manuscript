@@ -86,7 +86,6 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
             var page = overlay.get_child() as Latexeditor.Pdfpage;
             page.scale = this.zoom_level;
             page.queue_resize ();
-            page.queue_draw ();
             overlay = overlay.get_next_sibling () as Gtk.Overlay;
         }
         this.scroll.get_hadjustment ().set_value (h*factor);
