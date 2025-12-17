@@ -49,3 +49,7 @@ install_subdir('completion', install_dir: get_option('datadir'))
 install_data([
   'gtksource/style/latexeditor-classic.xml',
 ], install_dir: get_option('datadir') / 'gtksourceview-5' / 'styles')
+
+install_data([
+  'gtksource/languages/mylatex.lang',
+], install_dir: get_option('datadir') / 'gtksourceview-5' / 'language-specs')

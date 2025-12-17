@@ -50,7 +50,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         add_action_entries (actions, this);
 
         var lm = new GtkSource.LanguageManager();
-        var latex = lm.get_language ("latex");
+        var latex = lm.get_language ("mylatex");
         var buffer = source_view.get_buffer () as GtkSource.Buffer;
         buffer.set_language (latex);
 
