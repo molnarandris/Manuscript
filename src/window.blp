@@ -2,8 +2,8 @@ using Gtk 4.0;
 using Adw 1;
 using GtkSource 5;
 
-template $LatexeditorWindow: Adw.ApplicationWindow {
-    title: _("Latexeditor");
+template $ManuscriptWindow: Adw.ApplicationWindow {
+    title: _("Manuscript");
     default-width: 1400;
     default-height: 900;
     content: Adw.ToolbarView {
@@ -42,10 +42,10 @@ template $LatexeditorWindow: Adw.ApplicationWindow {
                     right-margin: 10;
                     top-margin: 6;
                     bottom-margin: 6;
-                    styles [ "latexeditor-editor", ]
+                    styles [ "manuscript-editor", ]
                 }
             };
-            end-child: $LatexeditorPdfviewer pdfviewer {
+            end-child: $ManuscriptPdfviewer pdfviewer {
 
             };
         };
@@ -75,7 +75,7 @@ menu primary_menu {
     }
 
     item {
-      label: _("_About Latexeditor");
+      label: _("_About Manuscript");
       action: "app.about";
     }
   }

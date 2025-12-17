@@ -1,12 +1,12 @@
 {
-    "id" : "com.github.molnarandris.latexeditor",
+    "id" : "com.github.molnarandris.manuscript",
     "runtime" : "org.gnome.Platform",
     "runtime-version" : "49",
     "sdk" : "org.gnome.Sdk",
     "sdk-extensions" : [
         "org.freedesktop.Sdk.Extension.vala"
     ],
-    "command" : "latexeditor",
+    "command" : "manuscript",
     "finish-args" : [
         "--share=network",
         "--share=ipc",
@@ -99,7 +99,7 @@
             ]
         },
         {
-            "name" : "latexeditor",
+            "name" : "manuscript",
             "builddir" : true,
             "buildsystem" : "meson",
             "sources" : [

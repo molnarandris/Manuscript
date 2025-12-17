@@ -1,4 +1,4 @@
-application_id = 'com.github.molnarandris.latexeditor'
+application_id = 'com.github.molnarandris.manuscript'
 
 scalable_dir = 'hicolor' / 'scalable' / 'apps'
 install_data(

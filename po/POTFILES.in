@@ -1,8 +1,8 @@
 # List of source files containing translatable strings.
 # Please keep this file sorted alphabetically.
-data/com.github.molnarandris.latexeditor.desktop.in
-data/com.github.molnarandris.latexeditor.metainfo.xml.in
-data/com.github.molnarandris.latexeditor.gschema.xml
+data/com.github.molnarandris.manuscript.desktop.in
+data/com.github.molnarandris.manuscript.metainfo.xml.in
+data/com.github.molnarandris.manuscript.gschema.xml
 src/main.vala
 src/window.vala
 src/window.ui

@@ -1,3 +1,3 @@
-[GtkTemplate (ui = "/com/github/molnarandris/latexeditor/preferences-dialog.ui")]
-public class Latexeditor.PreferencesDialog : Adw.PreferencesDialog {
+[GtkTemplate (ui = "/com/github/molnarandris/manuscript/preferences-dialog.ui")]
+public class Manuscript.PreferencesDialog : Adw.PreferencesDialog {
 }

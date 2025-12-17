@@ -18,12 +18,12 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-public class Latexeditor.Application : Adw.Application {
+public class Manuscript.Application : Adw.Application {
     public Application () {
         Object (
-            application_id: "com.github.molnarandris.latexeditor",
+            application_id: "com.github.molnarandris.manuscript",
             flags: ApplicationFlags.DEFAULT_FLAGS,
-            resource_base_path: "/com/github/molnarandris/latexeditor"
+            resource_base_path: "/com/github/molnarandris/manuscript"
         );
     }
 
@@ -45,15 +45,15 @@ public class Latexeditor.Application : Adw.Application {
     public override void activate () {
         base.activate ();
         GtkSource.init();
-        var win = this.active_window ?? new Latexeditor.Window (this);
+        var win = this.active_window ?? new Manuscript.Window (this);
         win.present ();
     }
 
     private void on_about_action () {
         string[] developers = { "Andras Molnar" };
         var about = new Adw.AboutDialog () {
-            application_name = "latexeditor",
-            application_icon = "com.github.molnarandris.latexeditor",
+            application_name = "manuscript",
+            application_icon = "com.github.molnarandris.manuscript",
             developer_name = "Andras Molnar",
             translator_credits = _("translator-credits"),
             version = "0.1.0",
@@ -65,7 +65,7 @@ public class Latexeditor.Application : Adw.Application {
     }
 
     private void on_preferences_action () {
-        var dialog = new Latexeditor.PreferencesDialog();
+        var dialog = new Manuscript.PreferencesDialog();
         dialog.present(this.active_window);
     }
 }

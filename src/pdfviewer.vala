@@ -1,5 +1,5 @@
-[GtkTemplate (ui = "/com/github/molnarandris/latexeditor/pdfviewer.ui")]
-public class Latexeditor.Pdfviewer : Gtk.Widget {
+[GtkTemplate (ui = "/com/github/molnarandris/manuscript/pdfviewer.ui")]
+public class Manuscript.Pdfviewer : Gtk.Widget {
     [GtkChild]
     private unowned Gtk.Box box;
     [GtkChild]
@@ -47,7 +47,7 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
         }
 
         for (int i =0; i< doc.get_n_pages(); i++) {
-            var page = new Latexeditor.Pdfpage (doc.get_page (i));
+            var page = new Manuscript.Pdfpage (doc.get_page (i));
             var overlay = new Gtk.Overlay ();
             overlay.set_child(page);
             this.box.append(overlay);
@@ -83,7 +83,7 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
         var v = scroll.get_vadjustment ().get_value ();
         var overlay = box.get_first_child () as Gtk.Overlay;
         while (overlay!=null) {
-            var page = overlay.get_child() as Latexeditor.Pdfpage;
+            var page = overlay.get_child() as Manuscript.Pdfpage;
             page.scale = this.zoom_level;
             page.queue_resize ();
             overlay = overlay.get_next_sibling () as Gtk.Overlay;
@@ -106,7 +106,7 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
         for (int i=0; i<p; i++) {
             overlay = (Gtk.Overlay) overlay.get_next_sibling ();
         }
-        var rect = new Latexeditor.SynctexRectangle(x,y,w,h,this.zoom_level);
+        var rect = new Manuscript.SynctexRectangle(x,y,w,h,this.zoom_level);
         overlay.add_overlay(rect);
     }
 
@@ -123,7 +123,7 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
     }
 }
 
-private class Latexeditor.Pdfpage : Gtk.Widget {
+private class Manuscript.Pdfpage : Gtk.Widget {
 
     private Poppler.Page page { get; set; }
     public double scale { get; set; }
@@ -173,7 +173,7 @@ private class Latexeditor.Pdfpage : Gtk.Widget {
     }
 }
 
-private class Latexeditor.SynctexRectangle : Gtk.Widget {
+private class Manuscript.SynctexRectangle : Gtk.Widget {
 
     private Gdk.RGBA color = Gdk.RGBA ();
     private int width;

@@ -18,8 +18,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-[GtkTemplate (ui = "/com/github/molnarandris/latexeditor/window.ui")]
-public class Latexeditor.Window : Adw.ApplicationWindow {
+[GtkTemplate (ui = "/com/github/molnarandris/manuscript/window.ui")]
+public class Manuscript.Window : Adw.ApplicationWindow {
     [GtkChild]
     private unowned GtkSource.View source_view;
     [GtkChild]
@@ -27,7 +27,7 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
     [GtkChild]
     private unowned Gtk.Button compile_button;
     [GtkChild]
-    private unowned Latexeditor.Pdfviewer pdfviewer;
+    private unowned Manuscript.Pdfviewer pdfviewer;
 
     public File? file { get; private set; default=null; }
     private Cancellable? compile_cancellable = null;
@@ -55,10 +55,10 @@ public class Latexeditor.Window : Adw.ApplicationWindow {
         buffer.set_language (latex);
 
         var sm = new GtkSource.StyleSchemeManager();
-        var style = sm.get_scheme("latexeditor-classic");
+        var style = sm.get_scheme("manuscript-classic");
         buffer.set_style_scheme(style);
 
-        var provider = new Latexeditor.CompletionProvider ();
+        var provider = new Manuscript.CompletionProvider ();
         var completion = this.source_view.get_completion ();
         completion.set_property ("select-on-show", true);
         completion.add_provider(provider);

@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=com.github.molnarandris.manuscript
+Exec=@bindir@/manuscript --gapplication-service

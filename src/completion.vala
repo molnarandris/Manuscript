@@ -1,4 +1,4 @@
-public class Latexeditor.CompletionProvider: Object, GtkSource.CompletionProvider {
+public class Manuscript.CompletionProvider: Object, GtkSource.CompletionProvider {
 
     Gtk.FilterListModel proposals {get; set;}
 
@@ -72,7 +72,7 @@ public class Latexeditor.CompletionProvider: Object, GtkSource.CompletionProvide
     }
 }
 
-class Latexeditor.CommandCompletionProposal: Object, GtkSource.CompletionProposal {
+class Manuscript.CommandCompletionProposal: Object, GtkSource.CompletionProposal {
 
     public string text { get; construct; }
 

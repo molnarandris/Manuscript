@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=com.github.molnarandris.latexeditor
-Exec=@bindir@/latexeditor --gapplication-service

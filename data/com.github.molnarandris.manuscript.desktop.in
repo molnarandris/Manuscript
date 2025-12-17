@@ -1,7 +1,7 @@
 [Desktop Entry]
-Name=latexeditor
-Exec=latexeditor
-Icon=com.github.molnarandris.latexeditor
+Name=manuscript
+Exec=manuscript
+Icon=com.github.molnarandris.manuscript
 Terminal=false
 Type=Application
 Categories=Utility;

@@ -1,4 +1,4 @@
-latexeditor_sources = [
+manuscript_sources = [
   'main.vala',
   'application.vala',
   'window.vala',
@@ -18,7 +18,7 @@ blueprints = custom_target('blueprints',
   command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', '@CURRENT_SOURCE_DIR@', '@INPUT@'],
 )
 
-latexeditor_deps = [
+manuscript_deps = [
   config_dep,
   dependency('gtk4'),
   dependency('libadwaita-1', version: '>= 1.4'),
@@ -26,14 +26,14 @@ latexeditor_deps = [
   dependency('poppler-glib'),
 ]
 
-latexeditor_sources += gnome.compile_resources('latexeditor-resources',
-  'latexeditor.gresource.xml',
-  c_name: 'latexeditor',
+manuscript_sources += gnome.compile_resources('manuscript-resources',
+  'manuscript.gresource.xml',
+  c_name: 'manuscript',
   dependencies: blueprints,
 )
 
-executable('latexeditor', latexeditor_sources,
-  dependencies: latexeditor_deps,
+executable('manuscript', manuscript_sources,
+  dependencies: manuscript_deps,
   include_directories: config_inc,
        install: true,
 )

@@ -1,1 +1,1 @@
-i18n.gettext('latexeditor', preset: 'glib')
+i18n.gettext('manuscript', preset: 'glib')
