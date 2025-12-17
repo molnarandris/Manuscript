@@ -12,14 +12,27 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
     private double hadj = 0;
     private double vadj = 0;
 
+    private Gtk.EventControllerScroll scroll_controller;
+
     construct {
         var layout_manager = new Gtk.BinLayout ();
         this.set_layout_manager (layout_manager);
         var controller = new Gtk.GestureZoom ();
-        controller.begin.connect(this.on_zoom_start);
+        controller.begin.connect(this.on_zoom_start); // this is bad: the signal handler can run later than the scale_changed handler.
         controller.end.connect(this.on_zoom_end);
         controller.scale_changed.connect(this.on_zoom_change);
         this.add_controller (controller);
+
+        scroll_controller = new Gtk.EventControllerScroll (Gtk.EventControllerScrollFlags.VERTICAL);
+        scroll_controller.scroll.connect(this.on_scroll);
+        // this is bad: the signal handler can run later than the scale_changed handler.
+        scroll_controller.scroll_begin.connect (() => {
+            this.on_zoom_start (null);
+        });
+        scroll_controller.scroll_end.connect (() => {
+            this.on_zoom_end (null);
+        });
+        this.scroll.add_controller (scroll_controller);
     }
 
     private void remove_children () {
@@ -58,6 +71,7 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
     }
 
     public void on_zoom_start (Gdk.EventSequence? sequence) {
+        this.zoom_tmp = 1;
         this.hadj = this.scroll.get_hadjustment ().get_value ();
         this.vadj = this.scroll.get_vadjustment ().get_value ();
     }
@@ -80,6 +94,16 @@ public class Latexeditor.Pdfviewer : Gtk.Widget {
         }
         this.scroll.get_hadjustment ().set_value (this.hadj*scale);
         this.scroll.get_vadjustment ().set_value (this.vadj*scale);
+    }
+
+    public bool on_scroll (double dx, double dy) {
+        var state = scroll_controller.get_current_event ()
+                                     .get_modifier_state ();
+        var ctrl = (bool) (state & Gdk.ModifierType.CONTROL_MASK);
+        var scale = dy>0 ? 1.05: 0.95;
+        this.zoom_tmp *= scale;
+        if (ctrl) this.on_zoom_change (this.zoom_tmp);
+        return ctrl;
     }
 
     public void add_synctex_rectangle(int p, float x, float y, float w, float h) {
