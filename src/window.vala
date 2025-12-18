@@ -249,6 +249,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
                 message("mklatex cancelled");
             } else {
                 message("mklatex failed");
+                this.get_error_from_log();
                 this.pdfviewer.set_error ();
             }
             this.compile_cancellable = null;
@@ -260,6 +261,39 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         string filename = this.file.peek_path().replace(".tex", ".pdf");
         this.pdfviewer.set_file("file://" + filename);
     }
+
+    public void get_error_from_log () {
+        var path = this.file.get_path ().replace (".tex", ".log");
+        var log_file = File.new_for_path(path);
+        log_file.load_contents_async.begin (null, (object, result) => {
+            uint8[] contents;
+            try {
+                log_file.load_contents_async.end (result, out contents, null);
+            } catch (Error e) {
+                stderr.printf ("Unable to open the log file “%s“: %s", path, e.message);
+            }
+            var log_text = (string) contents;
+            if (!log_text.validate ()) {
+                stderr.printf ("Unable to load the contents of the log file “%s”: " +
+                               "the file is not encoded with UTF-8\n",
+                               path);
+                return;
+            }
+            try {
+                var error_re = new Regex("! (.+?)\\nl\\.(\\d+) (.+?)\\n");
+                MatchInfo match_info;
+                error_re.match (log_text, 0, out match_info);
+                var msg = match_info.fetch (1);
+                var line = int.parse (match_info.fetch (2));
+                var location = match_info.fetch(3);
+                message("Latex Compile error: %s at line %d at position: %s", msg, line, location);
+            } catch (Error e) {
+                stderr.printf ("Regex error in log parser: %s", e.message);
+            }
+        });
+    }
+
+
 
     public void synctex () {
         message("synctex called");
