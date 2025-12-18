@@ -209,11 +209,11 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         }
         this.save_file.begin(this.file, (obj,res) => {
             this.save_file.end (res);
-            this.compile ();
+            this.compile.begin ();
         });
     }
 
-    private void compile() {
+    private async void compile() {
         if (this.compile_cancellable != null) {
             this.compile_cancellable.cancel ();
             return;
@@ -241,26 +241,24 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         this.compile_cancellable = new Cancellable ();
         this.compile_button.set_icon_name ("media-playback-stop-symbolic");
 
-        proc.wait_check_async.begin (this.compile_cancellable, (obj,res) => {
-            try {
-                proc.wait_check_async.end (res);
-            } catch (Error e) {
-                if (e is IOError.CANCELLED) {
-                    proc.force_exit ();
-                    message("mklatex cancelled");
-                } else {
-                    message("mklatex failed");
-                    this.pdfviewer.set_error ();
-                }
-                this.compile_cancellable = null;
-                this.compile_button.set_icon_name ("media-playback-start-symbolic");
-                return;
+        try {
+            yield proc.wait_check_async (this.compile_cancellable);
+        } catch (Error e) {
+            if (e is IOError.CANCELLED) {
+                proc.force_exit ();
+                message("mklatex cancelled");
+            } else {
+                message("mklatex failed");
+                this.pdfviewer.set_error ();
             }
             this.compile_cancellable = null;
             this.compile_button.set_icon_name ("media-playback-start-symbolic");
-            string filename = this.file.peek_path().replace(".tex", ".pdf");
-            this.pdfviewer.set_file("file://" + filename);
-        });
+            return;
+        }
+        this.compile_cancellable = null;
+        this.compile_button.set_icon_name ("media-playback-start-symbolic");
+        string filename = this.file.peek_path().replace(".tex", ".pdf");
+        this.pdfviewer.set_file("file://" + filename);
     }
 
     public void synctex () {
