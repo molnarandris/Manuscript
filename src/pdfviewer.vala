@@ -101,12 +101,12 @@ public class Manuscript.Pdfviewer : Gtk.Widget {
         return ctrl;
     }
 
-    public void add_synctex_rectangle (int p, float x, float y, float w, float h) {
+    public void add_synctex_rectangle (SynctexResult res) {
         var overlay = this.box.get_first_child () as Gtk.Overlay;
-        for (int i = 0; i < p; i++) {
+        for (int i = 0; i < res.page; i++) {
             overlay = (Gtk.Overlay) overlay.get_next_sibling ();
         }
-        var rect = new Manuscript.SynctexRectangle (x, y, w, h, this.zoom_level);
+        var rect = new Manuscript.SynctexRectangle (res, this.zoom_level);
         overlay.add_overlay (rect);
     }
 
@@ -178,15 +178,15 @@ private class Manuscript.SynctexRectangle : Gtk.Widget {
     private int width;
     private int height;
 
-    public SynctexRectangle (float x, float y, float w, float h, double scale) {
-        h += 2;
+    public SynctexRectangle (SynctexResult res, double scale) {
+        var h = res.height+ 2;
         this.color.parse ("#FFF38060");
         this.set_halign (Gtk.Align.START);
         this.set_valign (Gtk.Align.START);
-        this.set_margin_top ((int) ((y - h + 1) * scale));
-        this.set_margin_start ((int) (x * scale));
-        this.width = (int) (w * scale);
-        this.height = (int) (h * scale);
+        this.set_margin_top ((int) ((res.y - h + 1) * scale));
+        this.set_margin_start ((int) (res.x * scale));
+        this.width = (int) (res.width * scale);
+        this.height = (int) (res.height * scale);
 
         Timeout.add (700, () => {
             this.unparent ();

@@ -346,12 +346,14 @@ public class Manuscript.Window : Adw.ApplicationWindow {
                 var y = float.parse(match_info.fetch(3));
                 this.pdfviewer.scroll_to (pg-1, y);
                 do {
-                    var p = int.parse (match_info.fetch(1));
-                    var h = float.parse(match_info.fetch(2));
-                    var v = float.parse(match_info.fetch(3));
-                    var W = float.parse(match_info.fetch(4));
-                    var H = float.parse(match_info.fetch(5));
-                    this.pdfviewer.add_synctex_rectangle (p-1, h, v, W, H);
+                    SynctexResult rect = {
+                        page   : int.parse (match_info.fetch(1)) - 1,
+                        x      : double.parse(match_info.fetch(2)),
+                        y      : double.parse(match_info.fetch(3)),
+                        width  : double.parse(match_info.fetch(4)),
+                        height : double.parse(match_info.fetch(5)),
+                    };
+                    this.pdfviewer.add_synctex_rectangle (rect);
                 } while (match_info.next ());
             } catch (Error e) {
                 message("Regex error in synctex engine: %s", e.message);
