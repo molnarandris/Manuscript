@@ -5,6 +5,7 @@ manuscript_sources = [
   'pdfviewer.vala',
   'completion.vala',
   'preferences-dialog.vala',
+  'compiler.vala',
 ]
 
 blueprints = custom_target('blueprints',
