@@ -30,7 +30,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
     private unowned Manuscript.Pdfviewer pdfviewer;
 
     public File? file { get; private set; default=null; }
-    private Cancellable? compile_cancellable = null;
+    private Compiler compiler = new Compiler();
 
     public Window (Gtk.Application app) {
         Object (application: app);
@@ -128,6 +128,8 @@ public class Manuscript.Window : Adw.ApplicationWindow {
             this.window_title.subtitle = file.get_parent ().peek_path ();
             string filename = this.file.peek_path().replace(".tex", ".pdf");
             this.pdfviewer.set_file("file://" + filename);
+            this.compiler.path = file.peek_path ();
+            this.compiler.dir = file.get_parent ().peek_path ();
         });
     }
 
@@ -191,6 +193,8 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         this.file = file;
         this.window_title.title = display_name;
         this.window_title.subtitle = file.get_parent ().peek_path ();
+        this.compiler.path = file.peek_path ();
+        this.compiler.dir = file.get_parent ().peek_path ();
         buffer.set_modified (false);
     }
 
@@ -210,12 +214,12 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         this.save_file.begin(this.file, (obj,res) => {
             this.save_file.end (res);
             compile_button.set_icon_name ("media-playback-stop-symbolic");
-            compile.begin ((obj,res) => {
+            compiler.compile.begin ((obj,res) => {
                 CompilationResult compilation_result;
                 compile_button.set_icon_name ("media-playback-start-symbolic");
 
                 try{
-                    compilation_result = compile.end (res);
+                    compilation_result = compiler.compile.end (res);
                 } catch (Error e) {
                     message("Running latexmk failed: %s", e.message);
                     return;
@@ -229,93 +233,6 @@ public class Manuscript.Window : Adw.ApplicationWindow {
                 }
             });
         });
-    }
-
-    private async CompilationResult compile() throws Error {
-        if (this.compile_cancellable != null) {
-            this.compile_cancellable.cancel ();
-        }
-
-        Subprocess proc;
-        try{
-            string dir = this.file.get_parent ().get_path ();
-            // watch-bus required to cancel mklatex
-            proc = new Subprocess (SubprocessFlags.SEARCH_PATH_FROM_ENVP,
-                                   "flatpak-spawn",
-                                   "--host",
-                                   "--watch-bus",
-                                   "latexmk",
-                                   "-synctex=1",
-                                   "-pdf",
-                                   "-halt-on-error",
-                                   "-output-directory=" + dir,
-                                   this.file.get_path());
-        } catch (Error e) {
-            stderr.printf ("Latexmk spawn error: %s\n", e.message);
-            throw e;
-        }
-
-        this.compile_cancellable = new Cancellable ();
-
-        try {
-            yield proc.wait_check_async (this.compile_cancellable);
-        } catch (Error e) {
-            this.compile_cancellable = null;
-            if (e is IOError.CANCELLED) {
-                proc.force_exit ();
-                message("mklatex cancelled");
-            } else {
-                message("mklatex failed");
-                var entries = yield this.get_error_from_log();
-                return CompilationResult () { success = false, log = entries};
-            }
-            throw e;
-        }
-        this.compile_cancellable = null;
-        var entries = yield this.get_error_from_log();
-        return CompilationResult () { success = true, log = entries};
-    }
-
-    public async LogEntry[] get_error_from_log () {
-        var entries = new LogEntry[0];
-        var path = this.file.get_path ().replace (".tex", ".log");
-        var log_file = File.new_for_path(path);
-        uint8[] contents;
-        try {
-            yield log_file.load_contents_async(null, out contents, null);
-        } catch (Error e) {
-            stderr.printf ("Unable to open the log file “%s“: %s", path, e.message);
-            return entries;
-        }
-        var log_text = (string) contents;
-        if (!log_text.validate ()) {
-            stderr.printf ("Unable to load the contents of the log file “%s”: " +
-                           "the file is not encoded with UTF-8\n",
-                           path);
-            return entries;
-        }
-        try {
-            var error_re = new Regex("! (.+?)\\nl\\.(\\d+) (.+?)\\n");
-            MatchInfo match_info;
-            var success = error_re.match (log_text, 0, out match_info);
-            if (!success) return entries;
-            var location = SourceLocation () {
-                    file = this.file.get_path(),
-                    line = int.parse (match_info.fetch (2)),
-                    hint = match_info.fetch(3)
-            };
-
-            entries += LogEntry () {
-                type = LogType.ERROR,
-                message = match_info.fetch (1),
-                location =  location
-            };
-        } catch (Error e) {
-            message ("Regex error in log parser: %s", e.message);
-            return entries;
-        }
-        message("Trying to return");
-        return entries;
     }
 
 
