@@ -31,6 +31,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
 
     public File? file { get; private set; default=null; }
     private Compiler compiler = new Compiler();
+    private Synctex synctex_engine = new Synctex();
 
     public Window (Gtk.Application app) {
         Object (application: app);
@@ -41,7 +42,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
             {"save-as", save_file_with_dialog},
             {"save", on_save_action},
             {"compile", on_compile_action},
-            {"synctex", synctex},
+            {"synctex", on_synctex_action},
         };
 
     private Gtk.FileDialog filechooser = new Gtk.FileDialog ();
@@ -235,74 +236,38 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         });
     }
 
-
-
-    public void synctex () {
-        message("synctex called");
+    public void on_synctex_action () {
         if (this.file == null) {
             return;
         }
-        Subprocess proc;
-        var tex_path = this.file.peek_path ();
-        var pdf_path = tex_path.replace(".tex", ".pdf");
-        var buffer = this.source_view.get_buffer ();
-        Gtk.TextIter iter;
-        var insert_mark = buffer.get_insert ();
-        buffer.get_iter_at_mark (out iter, insert_mark);
-        var line = iter.get_line ().to_string ("%i");
-        var offset = iter.get_line_offset ().to_string ("%i");
-        var position = line + ":" + offset + ":" + tex_path;
-        try{
-            // watch-bus required to cancel
-            proc = new Subprocess (SubprocessFlags.SEARCH_PATH_FROM_ENVP|
-                                   SubprocessFlags.STDOUT_PIPE|
-                                   SubprocessFlags.STDERR_PIPE,
-                                   "flatpak-spawn",
-                                   "--host",
-                                   "--watch-bus",
-                                   "synctex",
-                                   "view",
-                                   "-i",
-                                   position,
-                                   "-o",
-                                   pdf_path);
-        } catch (Error e) {
-            stderr.printf ("Synctex spawn error: %s\n", e.message);
-            return;
-        }
+        var source = get_current_source_location();
+        synctex_engine.synctex_forward.begin(source, (obj, res)=> {
+            var rectangles = synctex_engine.synctex_forward.end(res);
+            var pg = rectangles[0].page;
+            var y = rectangles[0].y;
+            this.pdfviewer.scroll_to (pg, (float) y);
 
-        proc.communicate_utf8_async.begin (null, null, (obj,res) => {
-            string stdout, stderr;
-            try {
-                proc.communicate_utf8_async.end (res, out stdout, out stderr);
-            } catch (Error e) {
-                message("Synctex failed: %s", e.message);
-                return;
-            }
-            try {
-                Regex record;
-                MatchInfo match_info;
-                record = new Regex("Page:(.*)\n.*\n.*\nh:(.*)\nv:(.*)\nW:(.*)\nH:(.*)");
-                record.match (stdout, 0, out match_info);
-                var pg = int.parse (match_info.fetch(1));
-                var y = float.parse(match_info.fetch(3));
-                this.pdfviewer.scroll_to (pg-1, y);
-                do {
-                    SynctexResult rect = {
-                        page   : int.parse (match_info.fetch(1)) - 1,
-                        x      : double.parse(match_info.fetch(2)),
-                        y      : double.parse(match_info.fetch(3)),
-                        width  : double.parse(match_info.fetch(4)),
-                        height : double.parse(match_info.fetch(5)),
-                    };
-                    this.pdfviewer.add_synctex_rectangle (rect);
-                } while (match_info.next ());
-            } catch (Error e) {
-                message("Regex error in synctex engine: %s", e.message);
-                return;
+            foreach (var rect in rectangles) {
+                this.pdfviewer.add_synctex_rectangle (rect);
             }
         });
+    }
 
+    private SourceLocation get_current_source_location() {
+        var tex_path = file.peek_path ();
+        var buffer = source_view.get_buffer ();
+        var insert_mark = buffer.get_insert ();
+        Gtk.TextIter iter;
+        buffer.get_iter_at_mark (out iter, insert_mark);
+        var line = iter.get_line ();
+        var offset = iter.get_line_offset ();
+
+        return SourceLocation () {
+            file = tex_path,
+            line = line,
+            offset = offset,
+            hint = null
+            };
     }
 }
 

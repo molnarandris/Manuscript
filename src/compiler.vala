@@ -10,9 +10,9 @@ public struct LogEntry {
 }
 
 public struct SourceLocation {
-    public string? file;
-    public int? line;
-
+    public string file;
+    public int line;
+    public int? offset;
     public string? hint;
 }
 
@@ -21,14 +21,6 @@ public enum LogType{
     WARNING,
     BADBOX,
     INFO
-}
-
-public struct SynctexResult {
-    int page;
-    double x;
-    double y;
-    double width;
-    double height;
 }
 
 public class Manuscript.Compiler : Object {

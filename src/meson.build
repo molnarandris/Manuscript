@@ -6,6 +6,7 @@ manuscript_sources = [
   'completion.vala',
   'preferences-dialog.vala',
   'compiler.vala',
+  'synctex.vala',
 ]
 
 blueprints = custom_target('blueprints',
