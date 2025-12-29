@@ -17,6 +17,15 @@ template $ManuscriptPdfviewer: Widget {
             child: Adw.StatusPage {
                 title: _("Compilation Error");
                 description: _("There was an error at compilation. Fix the error and recompile the tex file to display the pdf document.");
+                // FIXME: setting child widget w/o proper size causes paned to allocate more than 50% to this pane
+                child: Adw.Clamp {
+                    maximum-size: 500;
+                    margin-top: 5;
+                    margin-bottom: 5;
+                    ListBox error_list {
+                        styles ["boxed-list",]
+                    }
+                };
             };
           }
         Adw.ViewStackPage {

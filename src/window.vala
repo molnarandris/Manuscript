@@ -85,6 +85,8 @@ public class Manuscript.Window : Adw.ApplicationWindow {
 
         this.filechooser.set_filters (filters);
         this.filechooser.set_default_filter (latex_filter);
+
+        pdfviewer.error_activated.connect (goto_log_entry);
     }
 
     private void open_file_with_dialog () {
@@ -215,6 +217,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         this.save_file.begin(this.file, (obj,res) => {
             this.save_file.end (res);
             compile_button.set_icon_name ("media-playback-stop-symbolic");
+            pdfviewer.remove_log_entries ();
             compiler.compile.begin ((obj,res) => {
                 CompilationResult compilation_result;
                 compile_button.set_icon_name ("media-playback-start-symbolic");
@@ -230,7 +233,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
                     string filename = this.file.peek_path().replace(".tex", ".pdf");
                     this.pdfviewer.set_file("file://" + filename);
                 } else {
-                    this.pdfviewer.set_error ();
+                    this.pdfviewer.set_error (compilation_result.log);
                 }
             });
         });
@@ -251,6 +254,16 @@ public class Manuscript.Window : Adw.ApplicationWindow {
                 this.pdfviewer.add_synctex_rectangle (rect);
             }
         });
+    }
+
+    private void goto_log_entry(LogEntry entry) {
+        message("row activated: %s", entry.message);
+        var buffer = source_view.get_buffer ();
+        Gtk.TextIter iter;
+        buffer.get_iter_at_line (out iter, entry.location.line);
+        source_view.scroll_to_iter (iter, 0.3, false, 0, 0);
+        buffer.place_cursor(iter);
+        source_view.grab_focus ();
     }
 
     private SourceLocation get_current_source_location() {
