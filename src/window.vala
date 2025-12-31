@@ -29,7 +29,21 @@ public class Manuscript.Window : Adw.ApplicationWindow {
     [GtkChild]
     private unowned Manuscript.Pdfviewer pdfviewer;
 
-    public File? file { get; private set; default=null; }
+    private File? _file = null;
+
+    public File? file {
+        get { return _file; }
+        private set {
+            if (_file == value)
+                return;
+
+            _file = value;
+
+            update_window_title ();
+            update_compiler_state ();
+            update_pdfviewer ();
+        }
+    }
     private Compiler compiler = new Compiler();
     private Synctex synctex_engine = new Synctex();
 
@@ -89,6 +103,32 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         pdfviewer.error_activated.connect (goto_log_entry);
     }
 
+    private void update_window_title () {
+        window_title.title = get_display_name (_file);
+        if (_file == null) {
+            window_title.subtitle = "";
+            return;
+        }
+        window_title.subtitle = _file.get_parent ().peek_path ();
+    }
+
+    private void update_compiler_state () {
+        if (_file == null)
+            return;
+
+        compiler.path = _file.peek_path ();
+        compiler.dir  = _file.get_parent ().peek_path ();
+    }
+
+    private void update_pdfviewer () {
+        if (_file == null)
+            return;
+
+        var pdf = _file.peek_path ().replace (".tex", ".pdf");
+        pdfviewer.set_file ("file://" + pdf);
+    }
+
+
     private void open_file_with_dialog () {
         this.filechooser.open.begin (this, null, (object, result) => {
             File? file = null;
@@ -127,12 +167,6 @@ public class Manuscript.Window : Adw.ApplicationWindow {
             buffer.set_modified (false);
 
             this.file = file;
-            this.window_title.title = display_name;
-            this.window_title.subtitle = file.get_parent ().peek_path ();
-            string filename = this.file.peek_path().replace(".tex", ".pdf");
-            this.pdfviewer.set_file("file://" + filename);
-            this.compiler.path = file.peek_path ();
-            this.compiler.dir = file.get_parent ().peek_path ();
         });
     }
 
@@ -194,10 +228,6 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         }
 
         this.file = file;
-        this.window_title.title = display_name;
-        this.window_title.subtitle = file.get_parent ().peek_path ();
-        this.compiler.path = file.peek_path ();
-        this.compiler.dir = file.get_parent ().peek_path ();
         buffer.set_modified (false);
     }
 
