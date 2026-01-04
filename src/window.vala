@@ -48,35 +48,39 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         add_action_entries (actions, this);
 
         pdfviewer.error_activated.connect (editor.goto_log_entry);
-        editor.notify["title"].connect((s,p) => {
+        editor.notify["file"].connect((s,p) => {
             update_window_title ();
             update_compiler_state ();
             update_pdfviewer ();
         });
+        editor.notify["modified"].connect((s,p) => {
+            update_window_title();
+        });
     }
 
     private void update_window_title () {
-        window_title.title = editor.title;
-        if (editor.file == null) {
-            window_title.subtitle = "";
+        var title = editor.basename ?? "New Document";
+        if (editor.modified) {
+            window_title.title = "• " + title;
         } else {
-            window_title.subtitle = editor.file.get_parent ().peek_path ();
+            window_title.title = title;
         }
+        window_title.subtitle = editor.dir ?? "unsaved";
     }
 
     private void update_compiler_state () {
         if (editor.file == null)
             return;
 
-        compiler.path = editor.file.peek_path ();
-        compiler.dir  = editor.file.get_parent ().peek_path ();
+        compiler.path = editor.path;
+        compiler.dir  = editor.dir;
     }
 
     private void update_pdfviewer () {
         if (editor.file == null)
             return;
 
-        var pdf = editor.file.peek_path ().replace (".tex", ".pdf");
+        var pdf = editor.path.replace (".tex", ".pdf");
         pdfviewer.set_file ("file://" + pdf);
     }
 

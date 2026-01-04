@@ -3,13 +3,24 @@ public class Manuscript.Editor : Adw.Bin {
     [GtkChild]
     private unowned GtkSource.View source_view;
 
-    public string title {get; private set; default = "New Document";}
+    public string? basename {get; private set; default = null;}
+    public string? dir {get; private set; default = null;}
+    public string? path {get; private set; default = null;}
+    public bool modified {get; private set; default = false;}
     private File? _file = null;
     public File? file {
         get { return _file; }
         private set {
             _file = value;
-            update_title();
+            if (_file == null) {
+                basename = null;
+                dir = null;
+                path = null;
+            } else {
+                basename = _file.get_basename();
+                dir = _file.get_parent().get_path();
+                path = _file.get_path();
+            }
         }
     }
     private Gtk.FileDialog file_dialog = new Gtk.FileDialog ();
@@ -44,7 +55,9 @@ public class Manuscript.Editor : Adw.Bin {
         file_dialog.set_filters (filters);
         file_dialog.set_default_filter (latex_filter);
 
-        buffer.modified_changed.connect (update_title);
+        buffer.modified_changed.connect(() => {
+            modified = buffer.get_modified();
+        });
     }
 
     public void goto_log_entry(LogEntry entry) {
@@ -157,15 +170,6 @@ public class Manuscript.Editor : Adw.Bin {
             display_name = file.get_basename ();
         }
         return display_name;
-    }
-
-    private void update_title() {
-        var modified = buffer.get_modified ();
-        string new_title = get_display_name (file);
-        if (modified) {
-            new_title = "• " + new_title;
-        }
-        title = new_title;
     }
 }
 
