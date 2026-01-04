@@ -1,5 +1,5 @@
 [GtkTemplate (ui = "/com/github/molnarandris/manuscript/pdfviewer.ui")]
-public class Manuscript.Pdfviewer : Gtk.Widget {
+public class Manuscript.Pdfviewer : Adw.Bin {
     [GtkChild]
     private unowned Gtk.Box box;
     [GtkChild]
@@ -17,8 +17,6 @@ public class Manuscript.Pdfviewer : Gtk.Widget {
     private Gtk.EventControllerScroll scroll_controller;
 
     construct {
-        var layout_manager = new Gtk.BinLayout ();
-        this.set_layout_manager (layout_manager);
         var controller = new Gtk.GestureZoom ();
         controller.begin.connect (this.zoom_gesture_begin_cb);
         controller.scale_changed.connect (this.zoom_gesture_scale_changed_cb);
