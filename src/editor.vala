@@ -49,7 +49,7 @@ public class Manuscript.Editor : Adw.Bin {
 
     public void goto_log_entry(LogEntry entry) {
         Gtk.TextIter iter;
-        buffer.get_iter_at_line (out iter, entry.location.line);
+        buffer.get_iter_at_line (out iter, entry.location.line - 1);
         source_view.scroll_to_iter (iter, 0.3, false, 0, 0);
         buffer.place_cursor(iter);
         source_view.grab_focus ();
