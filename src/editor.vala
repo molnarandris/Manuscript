@@ -69,14 +69,15 @@ public class Manuscript.Editor : Adw.Bin {
     }
 
     public SourceLocation get_cursor_location() {
-        var tex_path = file.peek_path ();
-        var insert_mark = buffer.get_insert ();
         Gtk.TextIter iter;
-        buffer.get_iter_at_mark (out iter, insert_mark);
-        var line = iter.get_line ();
-        var offset = iter.get_line_offset ();
+        buffer.get_iter_at_mark (out iter, buffer.get_insert ());
 
-        return SourceLocation () { file = tex_path, line = line, offset = offset, hint = null};
+        return SourceLocation () {
+            file   = file.peek_path (),
+            line   = iter.get_line (),
+            offset = iter.get_line_offset (),
+            hint   = null
+        };
     }
 
     public async void open_file_with_dialog () {
