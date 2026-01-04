@@ -21,29 +21,14 @@
 [GtkTemplate (ui = "/com/github/molnarandris/manuscript/window.ui")]
 public class Manuscript.Window : Adw.ApplicationWindow {
     [GtkChild]
-    private unowned GtkSource.View source_view;
-    [GtkChild]
     private unowned Adw.WindowTitle window_title;
     [GtkChild]
     private unowned Gtk.Button compile_button;
     [GtkChild]
     private unowned Manuscript.Pdfviewer pdfviewer;
+    [GtkChild]
+    private unowned Manuscript.Editor editor;
 
-    private File? _file = null;
-
-    public File? file {
-        get { return _file; }
-        private set {
-            if (_file == value)
-                return;
-
-            _file = value;
-
-            update_window_title ();
-            update_compiler_state ();
-            update_pdfviewer ();
-        }
-    }
     private Compiler compiler = new Compiler();
     private Synctex synctex_engine = new Synctex();
 
@@ -52,200 +37,72 @@ public class Manuscript.Window : Adw.ApplicationWindow {
     }
 
     private ActionEntry[] actions = {
-            {"open", open_file_with_dialog},
-            {"save-as", save_file_with_dialog},
+            {"open", on_open_action},
+            {"save-as", on_save_as_action},
             {"save", on_save_action},
             {"compile", on_compile_action},
             {"synctex", on_synctex_action},
         };
 
-    private Gtk.FileDialog filechooser = new Gtk.FileDialog ();
-
     construct {
         add_action_entries (actions, this);
 
-        var lm = new GtkSource.LanguageManager();
-        var latex = lm.get_language ("mylatex");
-        var buffer = source_view.get_buffer () as GtkSource.Buffer;
-        buffer.set_language (latex);
-
-        var sm = new GtkSource.StyleSchemeManager();
-        var style = sm.get_scheme("manuscript-classic");
-        buffer.set_style_scheme(style);
-
-        var provider = new Manuscript.CompletionProvider ();
-        var completion = this.source_view.get_completion ();
-        completion.set_property ("select-on-show", true);
-        completion.add_provider(provider);
-
-        buffer.modified_changed.connect (() => {
-            var modified = buffer.get_modified ();
-            string title = this.get_display_name (this.file);
-            if (modified) {
-                title = "• " + title;
-            }
-            this.window_title.set_title(title);
+        pdfviewer.error_activated.connect (editor.goto_log_entry);
+        editor.notify["title"].connect((s,p) => {
+            update_window_title ();
+            update_compiler_state ();
+            update_pdfviewer ();
         });
-
-        var filters = new ListStore ( typeof(Gtk.FileFilter) );
-
-        var latex_filter = new Gtk.FileFilter();
-        latex_filter.add_mime_type ("text/x-tex");
-        filters.append (latex_filter);
-
-        var text_filter = new Gtk.FileFilter();
-        text_filter.add_mime_type ("text/plain");
-        filters.append (text_filter);
-
-        this.filechooser.set_filters (filters);
-        this.filechooser.set_default_filter (latex_filter);
-
-        pdfviewer.error_activated.connect (goto_log_entry);
     }
 
     private void update_window_title () {
-        window_title.title = get_display_name (_file);
-        if (_file == null) {
+        window_title.title = editor.title;
+        if (editor.file == null) {
             window_title.subtitle = "";
-            return;
+        } else {
+            window_title.subtitle = editor.file.get_parent ().peek_path ();
         }
-        window_title.subtitle = _file.get_parent ().peek_path ();
     }
 
     private void update_compiler_state () {
-        if (_file == null)
+        if (editor.file == null)
             return;
 
-        compiler.path = _file.peek_path ();
-        compiler.dir  = _file.get_parent ().peek_path ();
+        compiler.path = editor.file.peek_path ();
+        compiler.dir  = editor.file.get_parent ().peek_path ();
     }
 
     private void update_pdfviewer () {
-        if (_file == null)
+        if (editor.file == null)
             return;
 
-        var pdf = _file.peek_path ().replace (".tex", ".pdf");
+        var pdf = editor.file.peek_path ().replace (".tex", ".pdf");
         pdfviewer.set_file ("file://" + pdf);
     }
 
-
-    private void open_file_with_dialog () {
-        this.filechooser.open.begin (this, null, (object, result) => {
-            File? file = null;
-            try {
-                file = filechooser.open.end(result);
-            } catch (Error e) {
-                stderr.printf ("Unable to select file: %s", e.message);
-                return;
-            }
-            this.open_file (file);
-        });
+    private void on_open_action () {
+        editor.open_file_with_dialog.begin();
     }
 
-    private void open_file (File file) {
-        file.load_contents_async.begin (null, (object, result) => {
-            string display_name = this.get_display_name (file);
-            uint8[] contents;
-            try {
-                file.load_contents_async.end (result, out contents, null);
-            } catch (Error e) {
-                stderr.printf ("Unable to open “%s“: %s", file.peek_path (), e.message);
-            }
-
-            if (!((string) contents).validate ()) {
-                stderr.printf ("Unable to load the contents of “%s”: "+
-                               "the file is not encoded with UTF-8\n",
-                               file.peek_path ());
-                return;
-            }
-
-            GtkSource.Buffer buffer = this.source_view.buffer as GtkSource.Buffer;
-            buffer.text = (string) contents;
-            Gtk.TextIter start;
-            buffer.get_start_iter (out start);
-            buffer.place_cursor (start);
-            buffer.set_modified (false);
-
-            this.file = file;
-        });
-    }
-
-    private void save_file_with_dialog () {
-        this.filechooser.save.begin (this, null, (object, result) => {
-            File? file = null;
-            try {
-                file = filechooser.save.end(result);
-            } catch (Error e) {
-                stderr.printf ("Unable to select file: %s", e.message);
-                return;
-            }
-            this.save_file.begin (file);
-        });
-    }
-
-    private string get_display_name(File? file) {
-        string display_name;
-        if (file == null) {
-            return "New Document";
-        }
-        try {
-            FileInfo info = file.query_info ("standard::display-name",
-                                             FileQueryInfoFlags.NONE);
-            display_name = info.get_attribute_string ("standard::display-name");
-        } catch (Error e) {
-            display_name = file.get_basename ();
-        }
-        return display_name;
-    }
-
-    private async void save_file (File file) {
-        var display_name = this.get_display_name (file);
-        GtkSource.Buffer buffer = this.source_view.buffer as GtkSource.Buffer;
-
-        Gtk.TextIter start;
-        buffer.get_start_iter (out start);
-
-        Gtk.TextIter end;
-        buffer.get_end_iter (out end);
-
-        string? text = buffer.get_text (start, end, false);
-
-        if (text == null || text.length == 0) return;
-
-        var bytes = new Bytes.take (text.data);
-
-        try{
-            yield file.replace_contents_bytes_async (bytes,
-                                                     null,
-                                                     false,
-                                                     FileCreateFlags.NONE,
-                                                     null,
-                                                     null);
-
-        } catch (Error e) {
-            stderr.printf ("Unable to save “%s”: %s\n", display_name, e.message);
-            return;
-        }
-
-        this.file = file;
-        buffer.set_modified (false);
+    private void on_save_as_action () {
+        editor.save_file_with_dialog.begin();
     }
 
     private void on_save_action () {
-        if (this.file == null) {
-            this.save_file_with_dialog ();
+        if (editor.file == null) {
+            editor.save_file_with_dialog.begin();
         } else {
-            this.save_file.begin(this.file);
+            editor.save_file.begin(editor.file);
         }
     }
 
     private void on_compile_action () {
-        if (this.file == null) {
+        if (editor.file == null) {
             message ("Create new file before compilation");
             return;
         }
-        this.save_file.begin(this.file, (obj,res) => {
-            this.save_file.end (res);
+        editor.save_file.begin(editor.file, (obj,res) => {
+            editor.save_file.end (res);
             compile_button.set_icon_name ("media-playback-stop-symbolic");
             pdfviewer.remove_log_entries ();
             compiler.compile.begin ((obj,res) => {
@@ -260,57 +117,30 @@ public class Manuscript.Window : Adw.ApplicationWindow {
                 }
 
                 if (compilation_result.success) {
-                    string filename = this.file.peek_path().replace(".tex", ".pdf");
-                    this.pdfviewer.set_file("file://" + filename);
+                    string filename = editor.file.peek_path().replace(".tex", ".pdf");
+                    pdfviewer.set_file("file://" + filename);
                 } else {
-                    this.pdfviewer.set_error (compilation_result.log);
+                    pdfviewer.set_error (compilation_result.log);
                 }
             });
         });
     }
 
     public void on_synctex_action () {
-        if (this.file == null) {
+        if (editor.file == null) {
             return;
         }
-        var source = get_current_source_location();
+        var source = editor.get_cursor_location();
         synctex_engine.synctex_forward.begin(source, (obj, res)=> {
             var rectangles = synctex_engine.synctex_forward.end(res);
             var pg = rectangles[0].page;
             var y = rectangles[0].y;
-            this.pdfviewer.scroll_to (pg, (float) y);
+            pdfviewer.scroll_to (pg, (float) y);
 
             foreach (var rect in rectangles) {
-                this.pdfviewer.add_synctex_rectangle (rect);
+                pdfviewer.add_synctex_rectangle (rect);
             }
         });
-    }
-
-    private void goto_log_entry(LogEntry entry) {
-        message("row activated: %s", entry.message);
-        var buffer = source_view.get_buffer ();
-        Gtk.TextIter iter;
-        buffer.get_iter_at_line (out iter, entry.location.line);
-        source_view.scroll_to_iter (iter, 0.3, false, 0, 0);
-        buffer.place_cursor(iter);
-        source_view.grab_focus ();
-    }
-
-    private SourceLocation get_current_source_location() {
-        var tex_path = file.peek_path ();
-        var buffer = source_view.get_buffer ();
-        var insert_mark = buffer.get_insert ();
-        Gtk.TextIter iter;
-        buffer.get_iter_at_mark (out iter, insert_mark);
-        var line = iter.get_line ();
-        var offset = iter.get_line_offset ();
-
-        return SourceLocation () {
-            file = tex_path,
-            line = line,
-            offset = offset,
-            hint = null
-            };
     }
 }
 

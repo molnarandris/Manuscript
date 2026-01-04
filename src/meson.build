@@ -7,6 +7,7 @@ manuscript_sources = [
   'preferences-dialog.vala',
   'compiler.vala',
   'synctex.vala',
+  'editor.vala',
 ]
 
 blueprints = custom_target('blueprints',
@@ -15,6 +16,7 @@ blueprints = custom_target('blueprints',
     'shortcuts-dialog.blp',
     'pdfviewer.blp',
     'preferences-dialog.blp',
+    'editor.blp',
   ),
   output: '.',
   command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', '@CURRENT_SOURCE_DIR@', '@INPUT@'],
