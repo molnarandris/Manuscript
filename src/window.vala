@@ -42,7 +42,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
             {"save-as", () => save_as_async.begin()},
             {"save", () => save_async.begin()},
             {"compile", on_compile_action},
-            {"synctex", on_synctex_action},
+            {"synctex", () => synctex_async.begin()},
         };
 
         add_action_entries (actions, this);
@@ -153,21 +153,24 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         });
     }
 
-    public void on_synctex_action () {
+    private async void synctex_async () {
         if (editor.file == null) {
             return;
         }
-        var source = editor.get_cursor_location();
-        synctex_engine.synctex_forward.begin(source, (obj, res)=> {
-            var rectangles = synctex_engine.synctex_forward.end(res);
-            var pg = rectangles[0].page;
-            var y = rectangles[0].y;
-            pdfviewer.scroll_to (pg, (float) y);
 
-            foreach (var rect in rectangles) {
-                pdfviewer.add_synctex_rectangle (rect);
-            }
-        });
+        var source = editor.get_cursor_location();
+        SynctexResult[] rects = {};
+        try {
+            rects = yield synctex_engine.synctex_forward(source);
+        } catch (Error e) {
+            message("Synctex error: %s", e.message);
+            return;
+        }
+
+        pdfviewer.scroll_to (rects[0].page, (float) rects[0].y);
+        foreach (var rect in rects) {
+            pdfviewer.add_synctex_rectangle (rect);
+        }
     }
 }
 
