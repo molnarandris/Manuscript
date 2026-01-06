@@ -59,13 +59,18 @@ public class Manuscript.Window : Adw.ApplicationWindow {
     }
 
     private void update_window_title () {
-        var title = editor.file.basename ?? "New Document";
-        if (editor.modified) {
-            window_title.title = "• " + title;
+        string title, subtitle;
+
+        if (editor.file == null) {
+            title = "New Document";
+            subtitle = "unsaved";
         } else {
-            window_title.title = title;
+            title = editor.file.basename;
+            subtitle = editor.file.dir;
         }
-        window_title.subtitle = editor.file.dir ?? "unsaved";
+
+        window_title.subtitle = subtitle;
+        window_title.title = editor.modified ? "• " + title : title;
     }
 
     private void update_compiler_state () {
