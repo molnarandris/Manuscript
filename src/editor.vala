@@ -65,14 +65,27 @@ public class Manuscript.Editor : Adw.Bin {
     public async void open_file_with_dialog () {
         assert(root != null);
 
-        File? file;
+        File? file_to_open;
         try {
-            file = yield file_dialog.open(root as Gtk.Window, null);
+            file_to_open = yield file_dialog.open(root as Gtk.Window, null);
         } catch (Error e) {
-            stderr.printf ("Unable to select file: %s", e.message);
+            if (e is Gtk.DialogError.DISMISSED) {
+                return;
+            }
+
+            var alert = new Adw.AlertDialog("Permission error", null);
+            alert.format_body(
+                "You do not have permission to open the chosen file.\nOpen another file?"
+            );
+            alert.add_response ("no", "No");
+            alert.add_response("yes", "Yes");
+            var response = yield alert.choose (root, null);
+            if (response == "yes") {
+                yield open_file_with_dialog();
+            }
             return;
         }
-        yield open_file (file);
+        yield open_file (file_to_open);
     }
 
     public async void open_file (File file_to_open) {
