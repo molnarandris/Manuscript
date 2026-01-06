@@ -126,8 +126,9 @@ public class Manuscript.Editor : Adw.Bin {
         try {
             file_to_save = yield file_dialog.save((Gtk.Window) root, null);
         } catch (Error e) {
-            stderr.printf ("Unable to select file: %s", e.message);
-            return;
+            if (e is Gtk.DialogError.DISMISSED) {
+                return;
+            }
         }
 
         yield save_file (new LatexFile(file_to_save));
@@ -139,9 +140,19 @@ public class Manuscript.Editor : Adw.Bin {
         try{
             yield file_to_save.replace_contents (text);
         } catch (Error e) {
-            var display_name = file_to_save.get_display_name ();
-            stderr.printf ("Unable to save “%s”: %s\n", display_name, e.message);
-            return;
+            if (e is GLib.IOError.PERMISSION_DENIED) {
+                var alert = new Adw.AlertDialog("Permission error", null);
+                alert.format_body(
+                    "You do not have permission to save to the chosen file.\nSave to another file?"
+                );
+                alert.add_response ("no", "No");
+                alert.add_response("yes", "Yes");
+                var response = yield alert.choose (root, null);
+                if (response == "yes") {
+                    yield save_with_dialog();
+                }
+                return;
+            }
         }
 
         buffer.set_modified (false);
