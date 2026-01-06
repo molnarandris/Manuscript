@@ -36,15 +36,15 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         Object (application: app);
     }
 
-    private ActionEntry[] actions = {
-            {"open", on_open_action},
-            {"save-as", on_save_as_action},
-            {"save", on_save_action},
+    construct {
+        ActionEntry[] actions = {
+            {"open", () => open_async.begin()},
+            {"save-as", () => save_as_async.begin()},
+            {"save", () => save_async.begin()},
             {"compile", on_compile_action},
             {"synctex", on_synctex_action},
         };
 
-    construct {
         add_action_entries (actions, this);
 
         pdfviewer.error_activated.connect (editor.goto_log_entry);
@@ -89,16 +89,38 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         pdfviewer.set_file ("file://" + pdf);
     }
 
-    private void on_open_action () {
-        editor.open_file_with_dialog.begin();
+    private async void open_async () {
+        try {
+            yield editor.open_file_with_dialog ();
+        } catch (Error e) {
+            var dialog = new Adw.AlertDialog (_("Can't open file"), null);
+            dialog.add_response("close", _("Close"));
+            dialog.format_body ("%s", e.message);
+            dialog.present(root);
+        }
     }
 
-    private void on_save_as_action () {
-        editor.save_with_dialog.begin();
+    private async void save_as_async () {
+        try {
+            yield editor.save_with_dialog ();
+        } catch (Error e) {
+            show_save_error_dialog(e);
+        }
     }
 
-    private void on_save_action () {
-        editor.save.begin();
+    private async void save_async () {
+        try {
+            yield editor.save ();
+        } catch (Error e) {
+            show_save_error_dialog(e);
+        }
+    }
+
+    private void show_save_error_dialog (Error e) {
+        var dialog = new Adw.AlertDialog (_("Can't save file"), null);
+        dialog.add_response("close", _("Close"));
+        dialog.format_body ("%s", e.message);
+        dialog.present(root);
     }
 
     private void on_compile_action () {

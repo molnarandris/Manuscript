@@ -62,45 +62,23 @@ public class Manuscript.Editor : Adw.Bin {
         };
     }
 
-    public async void open_file_with_dialog () {
+    public async void open_file_with_dialog () throws Error {
         assert(root != null);
 
         File? file_to_open;
         try {
             file_to_open = yield file_dialog.open(root as Gtk.Window, null);
-        } catch (Error e) {
-            if (e is Gtk.DialogError.DISMISSED) {
-                return;
-            }
-
-            var alert = new Adw.AlertDialog("Permission error", null);
-            alert.format_body(
-                "You do not have permission to open the chosen file.\nOpen another file?"
-            );
-            alert.add_response ("no", "No");
-            alert.add_response("yes", "Yes");
-            var response = yield alert.choose (root, null);
-            if (response == "yes") {
-                yield open_file_with_dialog();
-            }
+        } catch (Gtk.DialogError.DISMISSED e) {
             return;
         }
-        yield open_file (file_to_open);
+        yield open_file (new LatexFile(file_to_open));
     }
 
-    public async void open_file (File file_to_open) {
-        var latexfile = new LatexFile(file_to_open);
-        string display_name = latexfile.get_display_name ();
+    private async void open_file (LatexFile file_to_open) throws Error {
         string contents;
-        try {
-            contents = yield latexfile.load_contents ();
-        } catch (Error e) {
-            stderr.printf ("Unable to open “%s“: %s", display_name, e.message);
-            return;
-        }
-
+        contents = yield file_to_open.load_contents ();
         set_text(contents);
-        file = latexfile;
+        file = file_to_open;
     }
 
     private void set_text(string contents) {
@@ -111,7 +89,7 @@ public class Manuscript.Editor : Adw.Bin {
         buffer.set_modified (false);
     }
 
-    public async void save () {
+    public async void save () throws Error {
         if (file == null) {
             yield save_with_dialog();
         } else {
@@ -119,41 +97,23 @@ public class Manuscript.Editor : Adw.Bin {
         }
     }
 
-    public async void save_with_dialog () {
+    public async void save_with_dialog ()  throws Error {
         assert(root != null);
 
         File? file_to_save = null;
         try {
             file_to_save = yield file_dialog.save((Gtk.Window) root, null);
-        } catch (Error e) {
-            if (e is Gtk.DialogError.DISMISSED) {
-                return;
-            }
+        } catch (Gtk.DialogError.DISMISSED e) {
+            return;
         }
 
         yield save_file (new LatexFile(file_to_save));
     }
 
-    private async void save_file (LatexFile file_to_save) {
+    private async void save_file (LatexFile file_to_save)  throws Error {
         var text = get_text ();
 
-        try{
-            yield file_to_save.replace_contents (text);
-        } catch (Error e) {
-            if (e is GLib.IOError.PERMISSION_DENIED) {
-                var alert = new Adw.AlertDialog("Permission error", null);
-                alert.format_body(
-                    "You do not have permission to save to the chosen file.\nSave to another file?"
-                );
-                alert.add_response ("no", "No");
-                alert.add_response("yes", "Yes");
-                var response = yield alert.choose (root, null);
-                if (response == "yes") {
-                    yield save_with_dialog();
-                }
-                return;
-            }
-        }
+        yield file_to_save.replace_contents (text);
 
         buffer.set_modified (false);
         file = file_to_save;
