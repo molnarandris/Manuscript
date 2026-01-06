@@ -94,15 +94,11 @@ public class Manuscript.Window : Adw.ApplicationWindow {
     }
 
     private void on_save_as_action () {
-        editor.save_file_with_dialog.begin();
+        editor.save_with_dialog.begin();
     }
 
     private void on_save_action () {
-        if (editor.file == null) {
-            editor.save_file_with_dialog.begin();
-        } else {
-            editor.save_file.begin();
-        }
+        editor.save.begin();
     }
 
     private void on_compile_action () {
@@ -110,8 +106,8 @@ public class Manuscript.Window : Adw.ApplicationWindow {
             message ("Create new file before compilation");
             return;
         }
-        editor.save_file.begin((obj,res) => {
-            editor.save_file.end (res);
+        editor.save.begin((obj,res) => {
+            editor.save.end (res);
             compile_button.set_icon_name ("media-playback-stop-symbolic");
             pdfviewer.remove_log_entries ();
             compiler.compile.begin ((obj,res) => {

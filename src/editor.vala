@@ -98,7 +98,15 @@ public class Manuscript.Editor : Adw.Bin {
         buffer.set_modified (false);
     }
 
-    public async void save_file_with_dialog () {
+    public async void save () {
+        if (file == null) {
+            yield save_with_dialog();
+        } else {
+            yield save_file(file);
+        }
+    }
+
+    public async void save_with_dialog () {
         assert(root != null);
 
         File? file_to_save = null;
@@ -108,22 +116,23 @@ public class Manuscript.Editor : Adw.Bin {
             stderr.printf ("Unable to select file: %s", e.message);
             return;
         }
-        file = new LatexFile(file_to_save);
-        yield save_file ();
+
+        yield save_file (new LatexFile(file_to_save));
     }
 
-    public async void save_file () {
+    private async void save_file (LatexFile file_to_save) {
         var text = get_text ();
 
         try{
-            yield file.replace_contents (text);
+            yield file_to_save.replace_contents (text);
         } catch (Error e) {
-            var display_name = file.get_display_name ();
+            var display_name = file_to_save.get_display_name ();
             stderr.printf ("Unable to save “%s”: %s\n", display_name, e.message);
             return;
         }
 
         buffer.set_modified (false);
+        file = file_to_save;
     }
 
     private string get_text() {
