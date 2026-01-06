@@ -41,7 +41,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
             {"open", () => open_async.begin()},
             {"save-as", () => save_as_async.begin()},
             {"save", () => save_async.begin()},
-            {"compile", on_compile_action},
+            {"compile", () => compile_async.begin()},
             {"synctex", () => synctex_async.begin()},
         };
 
@@ -123,34 +123,45 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         dialog.present(root);
     }
 
-    private void on_compile_action () {
+    private async void compile_async () {
+        var dialog = new Adw.AlertDialog (_("Can't compile"), null);
+        dialog.add_response ("close", _("Close"));
+
         if (editor.file == null) {
-            message ("Create new file before compilation");
+            dialog.format_body ("Save the file before compiling");
+            dialog.present (root);
             return;
         }
-        editor.save.begin((obj,res) => {
-            editor.save.end (res);
-            compile_button.set_icon_name ("media-playback-stop-symbolic");
-            pdfviewer.remove_log_entries ();
-            compiler.compile.begin ((obj,res) => {
-                CompilationResult compilation_result;
-                compile_button.set_icon_name ("media-playback-start-symbolic");
 
-                try{
-                    compilation_result = compiler.compile.end (res);
-                } catch (Error e) {
-                    message("Running latexmk failed: %s", e.message);
-                    return;
-                }
+        try {
+            yield editor.save ();
+        } catch (Error e) {
+            dialog.format_body ("Error saving the file: %s", e.message);
+            dialog.present (root);
+            return;
+        }
 
-                if (compilation_result.success) {
-                    string filename = editor.file.path.replace(".tex", ".pdf");
-                    pdfviewer.set_file("file://" + filename);
-                } else {
-                    pdfviewer.set_error (compilation_result.log);
-                }
-            });
-        });
+        compile_button.set_icon_name ("media-playback-stop-symbolic");
+        pdfviewer.remove_log_entries ();
+
+        CompilationResult compilation_result;
+        try {
+            compilation_result = yield compiler.compile ();
+        } catch (Error e) {
+            dialog.format_body ("Running latexmk failed: %s", e.message);
+            dialog.present (root);
+            compile_button.set_icon_name ("media-playback-start-symbolic");
+            return;
+        }
+
+        compile_button.set_icon_name ("media-playback-start-symbolic");
+
+        if (compilation_result.success) {
+            string filename = editor.file.path.replace (".tex", ".pdf");
+            pdfviewer.set_file ("file://" + filename);
+        } else {
+            pdfviewer.set_error (compilation_result.log);
+        }
     }
 
     private async void synctex_async () {
