@@ -59,28 +59,28 @@ public class Manuscript.Window : Adw.ApplicationWindow {
     }
 
     private void update_window_title () {
-        var title = editor.basename ?? "New Document";
+        var title = editor.file.basename ?? "New Document";
         if (editor.modified) {
             window_title.title = "• " + title;
         } else {
             window_title.title = title;
         }
-        window_title.subtitle = editor.dir ?? "unsaved";
+        window_title.subtitle = editor.file.dir ?? "unsaved";
     }
 
     private void update_compiler_state () {
         if (editor.file == null)
             return;
 
-        compiler.path = editor.path;
-        compiler.dir  = editor.dir;
+        compiler.path = editor.file.path;
+        compiler.dir  = editor.file.dir;
     }
 
     private void update_pdfviewer () {
         if (editor.file == null)
             return;
 
-        var pdf = editor.path.replace (".tex", ".pdf");
+        var pdf = editor.file.path.replace (".tex", ".pdf");
         pdfviewer.set_file ("file://" + pdf);
     }
 
@@ -96,7 +96,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         if (editor.file == null) {
             editor.save_file_with_dialog.begin();
         } else {
-            editor.save_file.begin(editor.file);
+            editor.save_file.begin();
         }
     }
 
@@ -105,7 +105,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
             message ("Create new file before compilation");
             return;
         }
-        editor.save_file.begin(editor.file, (obj,res) => {
+        editor.save_file.begin((obj,res) => {
             editor.save_file.end (res);
             compile_button.set_icon_name ("media-playback-stop-symbolic");
             pdfviewer.remove_log_entries ();
@@ -121,7 +121,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
                 }
 
                 if (compilation_result.success) {
-                    string filename = editor.file.peek_path().replace(".tex", ".pdf");
+                    string filename = editor.file.path.replace(".tex", ".pdf");
                     pdfviewer.set_file("file://" + filename);
                 } else {
                     pdfviewer.set_error (compilation_result.log);

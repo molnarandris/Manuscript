@@ -3,26 +3,8 @@ public class Manuscript.Editor : Adw.Bin {
     [GtkChild]
     private unowned GtkSource.View source_view;
 
-    public string? basename {get; private set; default = null;}
-    public string? dir {get; private set; default = null;}
-    public string? path {get; private set; default = null;}
     public bool modified {get; private set; default = false;}
-    private File? _file = null;
-    public File? file {
-        get { return _file; }
-        private set {
-            _file = value;
-            if (_file == null) {
-                basename = null;
-                dir = null;
-                path = null;
-            } else {
-                basename = _file.get_basename();
-                dir = _file.get_parent().get_path();
-                path = _file.get_path();
-            }
-        }
-    }
+    public LatexFile? file {get; set; default = null;}
     private Gtk.FileDialog file_dialog = new Gtk.FileDialog ();
     private GtkSource.Buffer buffer;
 
@@ -73,7 +55,7 @@ public class Manuscript.Editor : Adw.Bin {
         buffer.get_iter_at_mark (out iter, buffer.get_insert ());
 
         return SourceLocation () {
-            file   = file.peek_path (),
+            file   = file.path,
             line   = iter.get_line (),
             offset = iter.get_line_offset (),
             hint   = null
@@ -93,24 +75,19 @@ public class Manuscript.Editor : Adw.Bin {
         yield open_file (file);
     }
 
-    public async void open_file (File file) {
-        string display_name = get_display_name (file);
-        uint8[] contents;
+    public async void open_file (File file_to_open) {
+        var latexfile = new LatexFile(file_to_open);
+        string display_name = latexfile.get_display_name ();
+        string contents;
         try {
-            yield file.load_contents_async (null, out contents, null);
+            contents = yield latexfile.load_contents ();
         } catch (Error e) {
             stderr.printf ("Unable to open “%s“: %s", display_name, e.message);
-        }
-
-        if (!((string) contents).validate ()) {
-            stderr.printf ("Unable to load the contents of “%s”: "+
-                           "the file is not encoded with UTF-8\n",
-                           display_name);
             return;
         }
 
-        set_text((string) contents);
-        this.file = file;
+        set_text(contents);
+        file = latexfile;
     }
 
     private void set_text(string contents) {
@@ -124,29 +101,28 @@ public class Manuscript.Editor : Adw.Bin {
     public async void save_file_with_dialog () {
         assert(root != null);
 
-        File? file = null;
+        File? file_to_save = null;
         try {
-            file = yield file_dialog.save((Gtk.Window) root, null);
+            file_to_save = yield file_dialog.save((Gtk.Window) root, null);
         } catch (Error e) {
             stderr.printf ("Unable to select file: %s", e.message);
             return;
         }
-        yield save_file (file);
+        file = new LatexFile(file_to_save);
+        yield save_file ();
     }
 
-    public async void save_file (File file) {
+    public async void save_file () {
         var text = get_text ();
-        var bytes = new Bytes.take (text.data);
 
         try{
-            yield file.replace_contents_bytes_async (bytes, null, false, FileCreateFlags.NONE, null, null);
+            yield file.replace_contents (text);
         } catch (Error e) {
-            var display_name = get_display_name (file);
+            var display_name = file.get_display_name ();
             stderr.printf ("Unable to save “%s”: %s\n", display_name, e.message);
             return;
         }
 
-        this.file = file;
         buffer.set_modified (false);
     }
 
@@ -157,20 +133,6 @@ public class Manuscript.Editor : Adw.Bin {
         buffer.get_end_iter (out end);
 
         return buffer.get_text (start, end, false);
-    }
-
-    private string get_display_name(File? file) {
-        string display_name;
-        if (file == null) {
-            return "New Document";
-        }
-        try {
-            FileInfo info = file.query_info ("standard::display-name", FileQueryInfoFlags.NONE);
-            display_name = info.get_attribute_string ("standard::display-name");
-        } catch (Error e) {
-            display_name = file.get_basename ();
-        }
-        return display_name;
     }
 }
 
