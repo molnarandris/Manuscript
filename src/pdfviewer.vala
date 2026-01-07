@@ -15,12 +15,13 @@ public class Manuscript.Pdfviewer : Adw.Bin {
     private double zoom_level = 1.4;
 
     private Gtk.EventControllerScroll scroll_controller;
+    private Gtk.GestureZoom zoom_controller;
 
     construct {
-        var controller = new Gtk.GestureZoom ();
-        controller.begin.connect (this.zoom_gesture_begin_cb);
-        controller.scale_changed.connect (this.zoom_gesture_scale_changed_cb);
-        this.add_controller (controller);
+        zoom_controller = new Gtk.GestureZoom ();
+        zoom_controller.begin.connect (this.zoom_gesture_begin_cb);
+        zoom_controller.scale_changed.connect (this.zoom_gesture_scale_changed_cb);
+        add_controller (zoom_controller);
 
         scroll_controller = new Gtk.EventControllerScroll (Gtk.EventControllerScrollFlags.VERTICAL);
         scroll_controller.scroll.connect (this.scroll_cb);
@@ -87,31 +88,26 @@ public class Manuscript.Pdfviewer : Adw.Bin {
     }
 
     public void zoom_gesture_scale_changed_cb (double scale) {
+        double x=0,y=0;
+        zoom_controller.get_bounding_box_center(out x, out y);
         var factor = scale - prev_zoom_gesture_scale + 1;
-        this.zoom (factor, 0, 0);
+        zoom (factor, x, y);
         prev_zoom_gesture_scale = scale;
     }
 
-    /**
-     * Zooms around a given coordinate.
-     *
-     * @factor: zoom factor to apply
-     * @x: x coordinate to zoom around
-     * @y: y coordinate to zoom around
-     */
-    public void zoom (double factor, double x, double y) {
-        this.zoom_level *= factor;
-        var h = scroll.get_hadjustment ().get_value ();
-        var v = scroll.get_vadjustment ().get_value ();
+    public void zoom (double factor, double center_x, double center_y) {
+        zoom_level *= factor;
+        var h = scroll.get_hadjustment ().get_value () + center_x;
+        var v = scroll.get_vadjustment ().get_value () + center_y;
         var overlay = box.get_first_child () as Gtk.Overlay;
         while (overlay != null) {
             var page = overlay.get_child () as Manuscript.Pdfpage;
-            page.scale = this.zoom_level;
+            page.scale = zoom_level;
             page.queue_resize ();
             overlay = overlay.get_next_sibling () as Gtk.Overlay;
         }
-        this.scroll.get_hadjustment ().set_value (h * factor);
-        this.scroll.get_vadjustment ().set_value (v * factor);
+        scroll.get_hadjustment ().set_value (h * factor - center_x);
+        scroll.get_vadjustment ().set_value (v * factor - center_y);
     }
 
     public bool scroll_cb (double dx, double dy) {
