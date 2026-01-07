@@ -19,13 +19,13 @@ public class Manuscript.Pdfviewer : Adw.Bin {
 
     construct {
         zoom_controller = new Gtk.GestureZoom ();
-        zoom_controller.begin.connect (this.zoom_gesture_begin_cb);
-        zoom_controller.scale_changed.connect (this.zoom_gesture_scale_changed_cb);
+        zoom_controller.begin.connect (zoom_gesture_begin_cb);
+        zoom_controller.scale_changed.connect (zoom_gesture_scale_changed_cb);
         add_controller (zoom_controller);
 
         scroll_controller = new Gtk.EventControllerScroll (Gtk.EventControllerScrollFlags.VERTICAL);
-        scroll_controller.scroll.connect (this.scroll_cb);
-        this.scroll.add_controller (scroll_controller);
+        scroll_controller.scroll.connect (scroll_cb);
+        scroll.add_controller (scroll_controller);
     }
 
     private void remove_children () {
@@ -38,7 +38,7 @@ public class Manuscript.Pdfviewer : Adw.Bin {
     }
 
     public void set_file (string uri) {
-        this.remove_children ();
+        remove_children ();
 
         Poppler.Document doc;
         try {
@@ -53,9 +53,9 @@ public class Manuscript.Pdfviewer : Adw.Bin {
             var page = new Manuscript.Pdfpage (doc.get_page (i));
             var overlay = new Gtk.Overlay ();
             overlay.set_child (page);
-            this.box.append (overlay);
+            box.append (overlay);
         }
-        this.stack.set_visible_child_name ("pdf");
+        stack.set_visible_child_name ("pdf");
     }
 
     public void remove_log_entries () {
@@ -63,8 +63,8 @@ public class Manuscript.Pdfviewer : Adw.Bin {
     }
 
     public void set_error (LogEntry[] log_entries) {
-        this.remove_children ();
-        this.stack.set_visible_child_name ("error");
+        remove_children ();
+        stack.set_visible_child_name ("error");
         foreach (var entry in log_entries) {
             if (entry.type == LogType.ERROR) {
                 message(entry.message);
@@ -115,21 +115,21 @@ public class Manuscript.Pdfviewer : Adw.Bin {
              .get_modifier_state ();
         var ctrl = (bool) (state & Gdk.ModifierType.CONTROL_MASK);
         var scale = dy > 0 ? 1.05 : 0.95;
-        if (ctrl)this.zoom (scale, 0, 0);
+        if (ctrl) zoom (scale, 0, 0);
         return ctrl;
     }
 
     public void add_synctex_rectangle (SynctexResult res) {
-        var overlay = this.box.get_first_child () as Gtk.Overlay;
+        var overlay = box.get_first_child () as Gtk.Overlay;
         for (int i = 0; i < res.page; i++) {
             overlay = (Gtk.Overlay) overlay.get_next_sibling ();
         }
-        var rect = new Manuscript.SynctexRectangle (res, this.zoom_level);
+        var rect = new Manuscript.SynctexRectangle (res, zoom_level);
         overlay.add_overlay (rect);
     }
 
     public void scroll_to (int p, float y) {
-        var overlay = this.box.get_first_child () as Gtk.Overlay;
+        var overlay = box.get_first_child () as Gtk.Overlay;
         for (int i = 0; i < p; i++) {
             overlay = (Gtk.Overlay) overlay.get_next_sibling ();
         }
@@ -198,17 +198,16 @@ private class Manuscript.SynctexRectangle : Gtk.Widget {
 
     public SynctexRectangle (SynctexResult res, double scale) {
         var h = res.height+ 2;
-        this.color.parse ("#FFF38060");
-        this.set_halign (Gtk.Align.START);
-        this.set_valign (Gtk.Align.START);
-        this.set_margin_top ((int) ((res.y - h + 1) * scale));
-        this.set_margin_start ((int) (res.x * scale));
-        this.width = (int) (res.width * scale);
-        this.height = (int) (res.height * scale);
+        color.parse ("#FFF38060");
+        set_halign (Gtk.Align.START);
+        set_valign (Gtk.Align.START);
+        set_margin_top ((int) ((res.y - h + 1) * scale));
+        set_margin_start ((int) (res.x * scale));
+        width = (int) (res.width * scale);
+        height = (int) (res.height * scale);
 
         Timeout.add (700, () => {
-            this.unparent ();
-            this.destroy ();
+            destroy ();
             return false;
         });
     }
@@ -222,17 +221,17 @@ private class Manuscript.SynctexRectangle : Gtk.Widget {
         minimum_baseline = -1;
         natural_baseline = -1;
         if (orientation == Gtk.Orientation.HORIZONTAL) {
-            minimum = this.width;
-            natural = this.width;
+            minimum = width;
+            natural = width;
         } else {
-            minimum = this.height;
-            natural = this.height;
+            minimum = height;
+            natural = height;
         }
     }
 
     protected override void snapshot (Gtk.Snapshot snapshot) {
         var rect = Graphene.Rect ();
-        rect.init (0, 0, this.width, this.height);
-        snapshot.append_color (this.color, rect);
+        rect.init (0, 0, width, height);
+        snapshot.append_color (color, rect);
     }
 }
