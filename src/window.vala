@@ -104,7 +104,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         try {
             yield editor.save_with_dialog ();
         } catch (Error e) {
-            show_save_error_dialog(e);
+            show_error_dialog("Can't save file", e.message);
         }
     }
 
@@ -112,32 +112,29 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         try {
             yield editor.save ();
         } catch (Error e) {
-            show_save_error_dialog(e);
+            show_error_dialog(_("Can't save file"), e.message);
         }
     }
 
-    private void show_save_error_dialog (Error e) {
-        var dialog = new Adw.AlertDialog (_("Can't save file"), null);
+    private void show_error_dialog (string title, string body) {
+        var dialog = new Adw.AlertDialog (title, null);
         dialog.add_response("close", _("Close"));
-        dialog.format_body ("%s", e.message);
+        dialog.format_body (body);
         dialog.present(root);
     }
 
     private async void compile_async () {
-        var dialog = new Adw.AlertDialog (_("Can't compile"), null);
-        dialog.add_response ("close", _("Close"));
+        string error_title = "Error during compilation";
 
         if (editor.file == null) {
-            dialog.format_body ("Save the file before compiling");
-            dialog.present (root);
+            show_error_dialog(error_title, "Save the file before compiling");
             return;
         }
 
         try {
             yield editor.save ();
         } catch (Error e) {
-            dialog.format_body ("Error saving the file: %s", e.message);
-            dialog.present (root);
+            show_error_dialog (error_title, "Error saving the file: %s".printf (e.message));
             return;
         }
 
@@ -148,8 +145,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         try {
             compilation_result = yield compiler.compile ();
         } catch (Error e) {
-            dialog.format_body ("Running latexmk failed: %s", e.message);
-            dialog.present (root);
+            show_error_dialog (error_title, "Running latexmk failed: %s".printf(e.message));
             compile_button.set_icon_name ("media-playback-start-symbolic");
             return;
         }
