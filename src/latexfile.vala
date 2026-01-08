@@ -25,10 +25,15 @@ public class Manuscript.LatexFile : Object {
         }
         monitor.changed.connect( (src, dest, event) => {
             if (suppress_monitor) {
+                if (event == FileMonitorEvent.CHANGES_DONE_HINT) {
+                    suppress_monitor = false;
+                }
                 return;
             }
 
-            if (event == FileMonitorEvent.CHANGED) {
+            if (event == FileMonitorEvent.CHANGED||
+                event == FileMonitorEvent.CHANGES_DONE_HINT ||
+                event == FileMonitorEvent.CREATED) {
                 changed();
             }
         });
@@ -47,18 +52,14 @@ public class Manuscript.LatexFile : Object {
     public async void replace_contents(string contents) throws Error {
         var bytes = new Bytes.take (contents.data);
         suppress_monitor = true;
-        try {
-            yield file.replace_contents_bytes_async (
-                bytes,
-                null,
-                false,
-                FileCreateFlags.NONE,
-                null,
-                null
-            );
-        } finally {
-            suppress_monitor = false;
-        }
+        yield file.replace_contents_bytes_async (
+            bytes,
+            null,
+            false,
+            FileCreateFlags.NONE,
+            null,
+            null
+        );
     }
 
     public string get_display_name() {
