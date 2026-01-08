@@ -3,18 +3,27 @@ using GtkSource 5;
 using Adw 1;
 
 template $ManuscriptEditor : Adw.Bin {
-    Gtk.ScrolledWindow {
-        GtkSource.View source_view {
-            wrap-mode: word_char;
-            pixels-above-lines: 4;
-            pixels-below-lines: 4;
-            pixels-inside-wrap: 8;
-            left-margin: 10;
-            right-margin: 10;
-            top-margin: 6;
-            bottom-margin: 6;
-            highlight-current-line: true;
-            styles [ "manuscript-editor", ]
+    Gtk.Box {
+        orientation: vertical;
+        vexpand:true;
+        Adw.Banner banner {
+            title: _("The file has been modified externally.");
+            button-label: _("Reload");
+        }
+        Gtk.ScrolledWindow {
+            GtkSource.View source_view {
+                vexpand: true;
+                wrap-mode: word_char;
+                pixels-above-lines: 4;
+                pixels-below-lines: 4;
+                pixels-inside-wrap: 8;
+                left-margin: 10;
+                right-margin: 10;
+                top-margin: 6;
+                bottom-margin: 6;
+                highlight-current-line: true;
+                styles [ "manuscript-editor", ]
+            }
         }
     }
 }

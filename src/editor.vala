@@ -2,6 +2,8 @@
 public class Manuscript.Editor : Adw.Bin {
     [GtkChild]
     private unowned GtkSource.View source_view;
+    [GtkChild]
+    private unowned Adw.Banner banner;
 
     public bool modified {get; private set; default = false;}
     public LatexFile? file {get; set; default = null;}
@@ -40,6 +42,8 @@ public class Manuscript.Editor : Adw.Bin {
         buffer.modified_changed.connect(() => {
             modified = buffer.get_modified();
         });
+
+        banner.button_clicked.connect (on_banner_button_clicked);
     }
 
     public void goto_log_entry(LogEntry entry) {
@@ -79,6 +83,20 @@ public class Manuscript.Editor : Adw.Bin {
         contents = yield file_to_open.load_contents ();
         set_text(contents);
         file = file_to_open;
+        file.changed.connect (()=>{
+            banner.revealed = true;
+        });
+    }
+
+    private void on_banner_button_clicked() {
+        banner.revealed = false;
+        open_file.begin(file, (obj,res) => {
+            try{
+                open_file.end(res);
+            } catch (Error e) {
+                message("Error reloading file: %s", e.message);
+            }
+        });
     }
 
     private void set_text(string contents) {
