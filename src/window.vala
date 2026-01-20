@@ -25,7 +25,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
     [GtkChild]
     private unowned Gtk.Button compile_button;
     [GtkChild]
-    private unowned Manuscript.Pdfviewer pdfviewer;
+    private unowned Manuscript.PdfViewer pdfviewer;
     [GtkChild]
     private unowned Manuscript.Editor editor;
 

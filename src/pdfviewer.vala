@@ -1,5 +1,5 @@
 [GtkTemplate (ui = "/com/github/molnarandris/manuscript/pdfviewer.ui")]
-public class Manuscript.Pdfviewer : Adw.Bin {
+public class Manuscript.PdfViewer : Adw.Bin {
     [GtkChild]
     private unowned Gtk.Box box;
     [GtkChild]
