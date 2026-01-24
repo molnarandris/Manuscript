@@ -1,59 +1,22 @@
 [GtkTemplate (ui = "/com/github/molnarandris/manuscript/right-pane.ui")]
 public class Manuscript.RightPane : Adw.Bin {
     [GtkChild]
-    private unowned Gtk.Box box;
+    private unowned Manuscript.PdfViewer pdf_viewer;
     [GtkChild]
     private unowned Adw.ViewStack stack;
-    [GtkChild]
-    private unowned Gtk.ScrolledWindow scroll;
     [GtkChild]
     private unowned Gtk.ListBox error_list;
 
     public signal void error_activated(LogEntry entry);
 
-    private double prev_zoom_gesture_scale = 1;
-    private double zoom_level = 1.4;
-
-    private Gtk.EventControllerScroll scroll_controller;
-    private Gtk.GestureZoom zoom_controller;
-
     construct {
-        zoom_controller = new Gtk.GestureZoom ();
-        zoom_controller.begin.connect (zoom_gesture_begin_cb);
-        zoom_controller.scale_changed.connect (zoom_gesture_scale_changed_cb);
-        add_controller (zoom_controller);
-
-        scroll_controller = new Gtk.EventControllerScroll (Gtk.EventControllerScrollFlags.VERTICAL);
-        scroll_controller.scroll.connect (scroll_cb);
-        scroll.add_controller (scroll_controller);
     }
 
-    private void remove_children () {
-        Gtk.Widget? child = null;
-        child = box.get_first_child () as Gtk.Widget;
-        while (child != null) {
-            box.remove (child);
-            child = box.get_first_child () as Gtk.Widget;
-        }
-    }
-
-    public void set_file (string uri) {
-        remove_children ();
-
-        Poppler.Document doc;
-        try {
-            doc = new Poppler.Document.from_file (uri, null);
+    public void set_path (string path) {
+        try{
+            pdf_viewer.set_path(path);
         } catch (Error e) {
-            stderr.printf ("Can't open the pdf: %s: %s", uri, e.message);
             stack.set_visible_child_name ("empty");
-            return;
-        }
-
-        for (int i = 0; i < doc.get_n_pages (); i++) {
-            var page = new Manuscript.Pdfpage (doc.get_page (i));
-            var overlay = new Gtk.Overlay ();
-            overlay.set_child (page);
-            box.append (overlay);
         }
         stack.set_visible_child_name ("pdf");
     }
@@ -63,7 +26,6 @@ public class Manuscript.RightPane : Adw.Bin {
     }
 
     public void set_error (LogEntry[] log_entries) {
-        remove_children ();
         stack.set_visible_child_name ("error");
         foreach (var entry in log_entries) {
             if (entry.type == LogType.ERROR) {
@@ -83,155 +45,15 @@ public class Manuscript.RightPane : Adw.Bin {
         }
     }
 
-    public void zoom_gesture_begin_cb (Gdk.EventSequence? sequence) {
-        prev_zoom_gesture_scale = 1;
-    }
-
-    public void zoom_gesture_scale_changed_cb (double scale) {
-        double x=0,y=0;
-        zoom_controller.get_bounding_box_center(out x, out y);
-        var factor = scale - prev_zoom_gesture_scale + 1;
-        zoom (factor, x, y);
-        prev_zoom_gesture_scale = scale;
-    }
-
-    public void zoom (double factor, double center_x, double center_y) {
-        zoom_level *= factor;
-        var h = scroll.get_hadjustment ().get_value () + center_x;
-        var v = scroll.get_vadjustment ().get_value () + center_y;
-        var overlay = box.get_first_child () as Gtk.Overlay;
-        while (overlay != null) {
-            var page = overlay.get_child () as Manuscript.Pdfpage;
-            page.scale = zoom_level;
-            page.queue_resize ();
-            overlay = overlay.get_next_sibling () as Gtk.Overlay;
-        }
-        scroll.get_hadjustment ().set_value (h * factor - center_x);
-        scroll.get_vadjustment ().set_value (v * factor - center_y);
-    }
-
-    public bool scroll_cb (double dx, double dy) {
-        var state = scroll_controller.get_current_event ()
-             .get_modifier_state ();
-        var ctrl = (bool) (state & Gdk.ModifierType.CONTROL_MASK);
-        var scale = dy > 0 ? 1.05 : 0.95;
-        if (ctrl) zoom (scale, 0, 0);
-        return ctrl;
-    }
-
     public void add_synctex_rectangle (SynctexResult res) {
-        var overlay = box.get_first_child () as Gtk.Overlay;
-        for (int i = 0; i < res.page; i++) {
-            overlay = (Gtk.Overlay) overlay.get_next_sibling ();
-        }
-        var rect = new Manuscript.SynctexRectangle (res, zoom_level);
-        overlay.add_overlay (rect);
+        stack.set_visible_child_name ("pdf");
+        pdf_viewer.add_synctex_rectangle (res);
     }
 
-    public void scroll_to (int p, float y) {
-        var overlay = box.get_first_child () as Gtk.Overlay;
-        for (int i = 0; i < p; i++) {
-            overlay = (Gtk.Overlay) overlay.get_next_sibling ();
-        }
-        Graphene.Point box_point;
-        var overlay_point = Graphene.Point () { x = 0, y = y };
-        overlay.compute_point (box, overlay_point, out box_point);
-        scroll.get_vadjustment ()
-         .set_value (box_point.y - scroll.get_height () * 0.3);
+    public void scroll_to (int page, float y) {
+        stack.set_visible_child_name ("pdf");
+        pdf_viewer.scroll_to (page, y);
     }
 }
 
-private class Manuscript.Pdfpage : Gtk.Widget {
 
-    private Poppler.Page page { get; set; }
-    public double scale { get; set; }
-
-    public Pdfpage (Poppler.Page page) {
-        this.page = page;
-    }
-
-    construct {
-        scale = 1.4;
-    }
-
-    protected override Gtk.SizeRequestMode get_request_mode () {
-        return Gtk.SizeRequestMode.CONSTANT_SIZE;
-    }
-
-    protected override void measure (Gtk.Orientation orientation,
-                                     int for_size,
-                                     out int minimum,
-                                     out int natural,
-                                     out int minimum_baseline,
-                                     out int natural_baseline) {
-        minimum_baseline = -1;
-        natural_baseline = -1;
-        double w, h;
-        page.get_size (out w, out h);
-        if (orientation == Gtk.Orientation.HORIZONTAL) {
-            minimum = (int) (w * scale);
-            natural = (int) (w * scale);
-        } else {
-            minimum = (int) (h * scale);
-            natural = (int) (h * scale);
-        }
-    }
-
-    protected override void snapshot (Gtk.Snapshot snapshot) {
-        Gdk.RGBA color = { 1.0f, 1.0f, 1.0f, 1.0f };
-        double w, h;
-        page.get_size (out w, out h);
-        var rect = Graphene.Rect ();
-        rect.init (0, 0, (int) (w * scale), (int) (h * scale));
-        snapshot.append_color (color, rect);
-        var ctx = snapshot.append_cairo (rect);
-        ctx.scale (scale, scale);
-        page.render (ctx);
-    }
-}
-
-private class Manuscript.SynctexRectangle : Gtk.Widget {
-
-    private Gdk.RGBA color = Gdk.RGBA ();
-    private int width;
-    private int height;
-
-    public SynctexRectangle (SynctexResult res, double scale) {
-        var h = res.height+ 2;
-        color.parse ("#FFF38060");
-        set_halign (Gtk.Align.START);
-        set_valign (Gtk.Align.START);
-        set_margin_top ((int) ((res.y - h + 1) * scale));
-        set_margin_start ((int) (res.x * scale));
-        width = (int) (res.width * scale);
-        height = (int) (res.height * scale);
-
-        Timeout.add (700, () => {
-            destroy ();
-            return false;
-        });
-    }
-
-    protected override void measure (Gtk.Orientation orientation,
-                                     int for_size,
-                                     out int minimum,
-                                     out int natural,
-                                     out int minimum_baseline,
-                                     out int natural_baseline) {
-        minimum_baseline = -1;
-        natural_baseline = -1;
-        if (orientation == Gtk.Orientation.HORIZONTAL) {
-            minimum = width;
-            natural = width;
-        } else {
-            minimum = height;
-            natural = height;
-        }
-    }
-
-    protected override void snapshot (Gtk.Snapshot snapshot) {
-        var rect = Graphene.Rect ();
-        rect.init (0, 0, width, height);
-        snapshot.append_color (color, rect);
-    }
-}

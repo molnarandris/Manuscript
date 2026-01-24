@@ -32,11 +32,7 @@ template $ManuscriptRightPane: Adw.Bin {
             title: _("Pdf");
             name: "pdf";
             child: Gtk.ScrolledWindow scroll {
-                Gtk.Box box {
-                  orientation: vertical;
-                  spacing: 5;
-                  halign: center;
-                }
+                $ManuscriptPdfViewer pdf_viewer {}
             };
         }
     }

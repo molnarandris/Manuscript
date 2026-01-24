@@ -86,7 +86,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
             return;
 
         var pdf = editor.file.path.replace (".tex", ".pdf");
-        right_pane.set_file ("file://" + pdf);
+        right_pane.set_path (pdf);
     }
 
     private async void open_async () {
@@ -154,7 +154,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
 
         if (compilation_result.success) {
             string filename = editor.file.path.replace (".tex", ".pdf");
-            right_pane.set_file ("file://" + filename);
+            right_pane.set_path (filename);
         } else {
             right_pane.set_error (compilation_result.log);
         }

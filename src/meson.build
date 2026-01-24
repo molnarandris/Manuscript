@@ -9,6 +9,7 @@ manuscript_sources = [
   'synctex.vala',
   'editor.vala',
   'latexfile.vala',
+  'pdfviewer.vala',
 ]
 
 blueprints = custom_target('blueprints',
