@@ -1,5 +1,5 @@
-[GtkTemplate (ui = "/com/github/molnarandris/manuscript/pdfviewer.ui")]
-public class Manuscript.PdfViewer : Adw.Bin {
+[GtkTemplate (ui = "/com/github/molnarandris/manuscript/right-pane.ui")]
+public class Manuscript.RightPane : Adw.Bin {
     [GtkChild]
     private unowned Gtk.Box box;
     [GtkChild]
