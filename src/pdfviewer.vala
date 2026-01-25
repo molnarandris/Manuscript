@@ -105,6 +105,11 @@ public class Manuscript.PdfViewer : Gtk.Widget {
         scroll.get_vadjustment ()
               .set_value (point.y - scroll.get_height () * 0.3);
     }
+
+    protected override void dispose () {
+        remove_children();
+        base.dispose ();
+    }
 }
 
 
