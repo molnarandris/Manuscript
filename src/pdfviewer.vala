@@ -1,4 +1,7 @@
 public class Manuscript.PdfViewer : Gtk.Widget {
+
+    private Poppler.Document? document;
+
     public double zoom_level = 1.4;
     private double prev_zoom_gesture_scale = 1;
 
@@ -36,12 +39,16 @@ public class Manuscript.PdfViewer : Gtk.Widget {
     public void set_path (string path) throws Error {
         remove_children ();
 
-        Poppler.Document doc;
         var uri = "file://" + path;
-        doc = new Poppler.Document.from_file (uri, null);
+        try{
+            document = new Poppler.Document.from_file (uri, null);
+        } catch (Error e) {
+            document = null;
+            throw (e);
+        }
 
-        for (int i = 0; i < doc.get_n_pages (); i++) {
-            var page = new Manuscript.Pdfpage (doc.get_page (i));
+        for (int i = 0; i < document.get_n_pages (); i++) {
+            var page = new Manuscript.Pdfpage (document.get_page (i));
             var overlay = new Gtk.Overlay ();
             overlay.set_child (page);
             overlay.insert_before (this, null);
