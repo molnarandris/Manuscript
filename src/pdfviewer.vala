@@ -2,6 +2,8 @@ public class Manuscript.PdfViewer : Gtk.Widget {
 
     private Poppler.Document? document;
 
+    public int spacing = 5;
+
     public double zoom_level = 1.4;
     private double prev_zoom_gesture_scale = 1;
 
@@ -13,7 +15,7 @@ public class Manuscript.PdfViewer : Gtk.Widget {
 
     construct {
         var layout = new Gtk.BoxLayout (Gtk.Orientation.VERTICAL);
-        layout.set_spacing (5);
+        layout.set_spacing (spacing);
         set_layout_manager(layout);
 
         zoom_controller = new Gtk.GestureZoom ();
