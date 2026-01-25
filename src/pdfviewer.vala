@@ -29,6 +29,16 @@ public class Manuscript.PdfViewer : Gtk.Widget {
 
     }
 
+    public override void measure (Gtk.Orientation orientation, int for_size, out int minimum, out int natural, out int minimum_baseline, out int natural_baseline) {
+        minimum_baseline = -1;
+        natural_baseline = -1;
+        if (orientation == Gtk.Orientation.HORIZONTAL) {
+            minimum = natural = (int) (document.width * zoom_level);
+        } else {
+            minimum = natural = (int) (document.height * zoom_level + document.n_pages * spacing);
+        }
+    }
+
     public override void snapshot (Gtk.Snapshot snapshot) {
         var w = get_width ();
         var h = get_height ();
