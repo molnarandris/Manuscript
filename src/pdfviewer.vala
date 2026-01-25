@@ -63,8 +63,8 @@ public class Manuscript.PdfViewer : Gtk.Widget {
     public void zoom (double factor, double center_x, double center_y) {
         zoom_level *= factor;
         var scroll = get_ancestor (typeof(Gtk.ScrolledWindow)) as Gtk.ScrolledWindow;
-        var h = scroll.get_hadjustment ().get_value () + center_x;
-        var v = scroll.get_vadjustment ().get_value () + center_y;
+        var h = scroll.get_hadjustment ().get_value ();
+        var v = scroll.get_vadjustment ().get_value ();
         var overlay = get_first_child () as Gtk.Overlay;
         while (overlay != null) {
             var page = overlay.get_child () as Manuscript.Pdfpage;
@@ -72,8 +72,8 @@ public class Manuscript.PdfViewer : Gtk.Widget {
             page.queue_resize ();
             overlay = overlay.get_next_sibling () as Gtk.Overlay;
         }
-        scroll.get_hadjustment ().set_value (h * factor - center_x);
-        scroll.get_vadjustment ().set_value (v * factor - center_y);
+        scroll.get_hadjustment ().set_value (center_x * factor + h - center_x);
+        scroll.get_vadjustment ().set_value (center_y * factor + v - center_y);
     }
 
     public bool scroll_cb (double dx, double dy) {
