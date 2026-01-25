@@ -29,6 +29,16 @@ public class Manuscript.PdfViewer : Gtk.Widget {
 
     }
 
+    public override void snapshot (Gtk.Snapshot snapshot) {
+        var w = get_width ();
+        var h = get_height ();
+        var rect = Graphene.Rect().init (0, 0, w, h);
+
+        snapshot.push_clip (rect);
+        base.snapshot(snapshot);
+        snapshot.pop ();
+    }
+
     private void remove_children () {
         Gtk.Widget? child = null;
         child = get_first_child () as Gtk.Widget;
