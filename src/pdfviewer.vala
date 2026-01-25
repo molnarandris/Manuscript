@@ -10,6 +10,7 @@ public class Manuscript.PdfViewer : Gtk.Widget {
 
     construct {
         var layout = new Gtk.BoxLayout (Gtk.Orientation.VERTICAL);
+        layout.set_spacing (5);
         set_layout_manager(layout);
 
         zoom_controller = new Gtk.GestureZoom ();
