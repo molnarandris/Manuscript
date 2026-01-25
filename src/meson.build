@@ -10,6 +10,7 @@ manuscript_sources = [
   'editor.vala',
   'latexfile.vala',
   'pdfviewer.vala',
+  'pdfdocument.vala',
 ]
 
 blueprints = custom_target('blueprints',
@@ -30,6 +31,7 @@ manuscript_deps = [
   dependency('libadwaita-1', version: '>= 1.4'),
   dependency('gtksourceview-5'),
   dependency('poppler-glib'),
+  libmath,
 ]
 
 manuscript_sources += gnome.compile_resources('manuscript-resources',

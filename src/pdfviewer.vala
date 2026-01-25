@@ -1,6 +1,6 @@
 public class Manuscript.PdfViewer : Gtk.Widget {
 
-    private Poppler.Document? document;
+    private PdfDocument? document;
 
     public int spacing = 5;
 
@@ -41,15 +41,14 @@ public class Manuscript.PdfViewer : Gtk.Widget {
     public void set_path (string path) throws Error {
         remove_children ();
 
-        var uri = "file://" + path;
         try{
-            document = new Poppler.Document.from_file (uri, null);
+            document = new PdfDocument (path);
         } catch (Error e) {
             document = null;
             throw (e);
         }
 
-        for (int i = 0; i < document.get_n_pages (); i++) {
+        for (int i = 0; i < document.n_pages; i++) {
             var page = new Manuscript.Pdfpage (document.get_page (i));
             var overlay = new Gtk.Overlay ();
             overlay.set_child (page);

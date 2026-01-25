@@ -7,7 +7,8 @@ project('manuscript', ['c', 'vala'],
 i18n = import('i18n')
 gnome = import('gnome')
 valac = meson.get_compiler('vala')
-
+cc = meson.get_compiler('c')
+libmath = cc.find_library('m')
 
 srcdir = meson.project_source_root() / 'src'
 
