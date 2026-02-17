@@ -31,6 +31,7 @@ manuscript_deps = [
   dependency('libadwaita-1', version: '>= 1.4'),
   dependency('gtksourceview-5'),
   dependency('poppler-glib'),
+  dependency('gee-0.8'),
   libmath,
 ]
 
