@@ -166,18 +166,15 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         }
 
         var source = editor.get_cursor_location();
-        SynctexResult[] rects = {};
+        Gee.HashMap<int, Gee.ArrayList<Graphene.Rect?>> synctex_results;
         try {
-            rects = yield synctex_engine.synctex_forward(source);
+            synctex_results = yield synctex_engine.synctex_forward(source);
         } catch (Error e) {
             message("Synctex error: %s", e.message);
             return;
         }
 
-        right_pane.scroll_to (rects[0].page, (float) rects[0].y);
-        foreach (var rect in rects) {
-            right_pane.add_synctex_rectangle (rect);
-        }
+        right_pane.add_synctex_rectangles (synctex_results);
     }
 }
 

@@ -199,23 +199,31 @@ public class Manuscript.PdfViewer : Gtk.Widget, Gtk.Scrollable {
         return ctrl;
     }
 
-    public void add_synctex_rectangle (SynctexResult res) {
-        var page = get_first_child () as Manuscript.Pdfpage;
-        for (int i = 0; i < res.page; i++) {
-            page = page.get_next_sibling ()  as Manuscript.Pdfpage;
+    public void add_synctex_rectangles (Gee.HashMap<int, Gee.ArrayList<Graphene.Rect?>> synctex_results) {
+
+        var min_page = int.MAX;
+        foreach (var page_num in synctex_results.keys) {
+            if (min_page < 0) min_page = page_num;
+            min_page = page_num < min_page ? page_num : min_page;
+            var list = synctex_results.get (page_num);
+            var page = get_first_child () as Manuscript.Pdfpage;
+            for (int i = 0; i < page_num; i++) {
+                page = page.get_next_sibling ()  as Manuscript.Pdfpage;
+            }
+            page.add_synctex_rectangles (list);
         }
-        page.add_synctex_rectangle (res);
+        if (min_page == int.MAX) return;
+        var list = synctex_results.get (min_page);
+        var min_y = float.MAX;
+        foreach (var rect in list) {
+            min_y = rect.origin.y < min_y ? rect.origin.y : min_y;
+        }
+        if (min_y == float.MAX) min_y = 0;
+        scroll_to(min_page, min_y);
     }
 
     public void scroll_to (int p, float y) {
-        var page = get_first_child () as Manuscript.Pdfpage;
-        for (int i = 0; i < p; i++) {
-            page = page.get_next_sibling () as Manuscript.Pdfpage;
-        }
-        Graphene.Point viewer_point;
-        var page_point = Graphene.Point () { x = 0, y = y };
-        page.compute_point (this, page_point, out viewer_point);
-        vadjustment.value = viewer_point.y - this.get_height () * 0.3;
+        vadjustment.set_value ((document.y_offsets[p] + y)*scale - get_height () * 0.3);
     }
 
     protected override void dispose () {
@@ -236,7 +244,7 @@ private class Manuscript.Pdfpage : Gtk.Widget {
             return page.get_index ();
         }
     }
-    public Gee.ArrayList<SynctexResult?> synctex_rectangles = new Gee.ArrayList<SynctexResult?> ();
+    public Gee.ArrayList<Graphene.Rect?> synctex_rectangles = new Gee.ArrayList<Graphene.Rect?> ();
 
     public Pdfpage (Poppler.Page page) {
         this.page = page;
@@ -263,21 +271,15 @@ private class Manuscript.Pdfpage : Gtk.Widget {
         }
     }
 
-    public void add_synctex_rectangle (SynctexResult rectangle) {
-        synctex_rectangles.add (rectangle);
+    public void add_synctex_rectangles (Gee.ArrayList<Graphene.Rect?> rectangles) {
+        if (synctex_rectangles.size !=0) return;
+        foreach(var rect in rectangles) {
+            synctex_rectangles.add (rect);
+        }
         queue_draw ();
 
         GLib.Timeout.add (700, () => {
-            for (int i = synctex_rectangles.size - 1; i >= 0; i--) {
-                var r = synctex_rectangles[i];
-                if (r.page == rectangle.page &&
-                    r.x == rectangle.x &&
-                    r.y == rectangle.y &&
-                    r.width == rectangle.width &&
-                    r.height == rectangle.height) {
-                    synctex_rectangles.remove_at(i);
-                }
-            }
+            synctex_rectangles.clear();
             queue_draw ();
             return false;
         });
@@ -290,14 +292,13 @@ private class Manuscript.Pdfpage : Gtk.Widget {
         var page_rectangle = Graphene.Rect ();
         page_rectangle.init (0, 0, (int) (w * scale), (int) (h * scale));
         snapshot.append_color (white, page_rectangle);
+        foreach (var synctex_rectangle in synctex_rectangles) {
+            var yellow = Gdk.RGBA () { red = 1.0f, green = 1.0f, blue = 0.0f, alpha = 0.4f };
+            synctex_rectangle = synctex_rectangle.scale ( (float) scale, (float)  scale);
+            snapshot.append_color (yellow, synctex_rectangle);
+        }
         var ctx = snapshot.append_cairo (page_rectangle);
         ctx.scale (scale, scale);
         page.render (ctx);
-        foreach (var r in synctex_rectangles) {
-            var synctex_rectangle = Graphene.Rect ();
-            var yellow = Gdk.RGBA () { red = 1.0f, green = 1.0f, blue = 0.0f, alpha = 0.4f };
-            synctex_rectangle.init ( (float) (r.x * scale), (float) (r.y * scale), (float) (r.width * scale), (float) (r.height * scale));
-            snapshot.append_color (yellow, synctex_rectangle);
-        }
     }
 }

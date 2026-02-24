@@ -45,9 +45,9 @@ public class Manuscript.RightPane : Adw.Bin {
         }
     }
 
-    public void add_synctex_rectangle (SynctexResult res) {
+    public void add_synctex_rectangles (Gee.HashMap<int, Gee.ArrayList<Graphene.Rect?>> synctex_results) {
         stack.set_visible_child_name ("pdf");
-        pdf_viewer.add_synctex_rectangle (res);
+        pdf_viewer.add_synctex_rectangles (synctex_results);
     }
 
     public void scroll_to (int page, float y) {

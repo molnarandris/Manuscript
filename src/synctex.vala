@@ -23,25 +23,21 @@ public class Manuscript.Synctex : Object {
                source.file;
     }
 
-    public async SynctexResult[] synctex_forward (SourceLocation source) throws Error {
+    public async Gee.HashMap<int, Gee.ArrayList<Graphene.Rect?>> synctex_forward (SourceLocation source) throws Error {
         Subprocess proc;
-        SynctexResult[] rectangles = {};
         var position = get_position_string(source);
         var pdf_path = source.file.replace(".tex", ".pdf");
+        Gee.HashMap<int, Gee.ArrayList<Graphene.Rect?>> rects_by_page =
+            new Gee.HashMap<int, Gee.ArrayList<Graphene.Rect?>> ();
         try{
             // watch-bus required to cancel
             proc = new Subprocess (SubprocessFlags.SEARCH_PATH_FROM_ENVP|
                                    SubprocessFlags.STDOUT_PIPE|
                                    SubprocessFlags.STDERR_PIPE,
-                                   "flatpak-spawn",
-                                   "--host",
-                                   "--watch-bus",
-                                   "synctex",
-                                   "view",
-                                   "-i",
-                                   position,
-                                   "-o",
-                                   pdf_path);
+                                   "flatpak-spawn", "--host", "--watch-bus",
+                                   "synctex", "view",
+                                   "-i", position,
+                                   "-o", pdf_path);
         } catch (Error e) {
             stderr.printf ("Synctex spawn error: %s\n", e.message);
             throw e;
@@ -60,18 +56,24 @@ public class Manuscript.Synctex : Object {
             record = new Regex("Page:(.*)\n.*\n.*\nh:(.*)\nv:(.*)\nW:(.*)\nH:(.*)");
             record.match (stdout, 0, out match_info);
             do {
-                rectangles += SynctexResult () {
-                    page   = int.parse (match_info.fetch(1)) - 1,
-                    x      = double.parse(match_info.fetch(2)),
-                    y      = double.parse(match_info.fetch(3)),
-                    width  = double.parse(match_info.fetch(4)),
-                    height = double.parse(match_info.fetch(5)),
-                };
+                var page   = int.parse (match_info.fetch(1)) - 1;
+                var rect = Graphene.Rect ();
+                var x = float.parse(match_info.fetch(2));
+                var y = float.parse(match_info.fetch(3));
+                var w = float.parse(match_info.fetch(4));
+                var h = float.parse(match_info.fetch(5));
+                rect.init(x, Math.fmaxf (0,y-h), w,h);
+                var list = rects_by_page.get (page);
+                if (list == null) {
+                    list = new Gee.ArrayList<Graphene.Rect?> ();
+                    rects_by_page.set (page, list);
+                }
+                list.add (rect);
             } while (match_info.next ());
         } catch (Error e) {
             message("Regex error in synctex engine: %s", e.message);
             throw e;
         }
-        return rectangles;
+        return rects_by_page;
     }
 }
