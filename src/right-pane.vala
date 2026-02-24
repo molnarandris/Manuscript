@@ -49,11 +49,6 @@ public class Manuscript.RightPane : Adw.Bin {
         stack.set_visible_child_name ("pdf");
         pdf_viewer.add_synctex_rectangles (synctex_results);
     }
-
-    public void scroll_to (int page, float y) {
-        stack.set_visible_child_name ("pdf");
-        pdf_viewer.scroll_to (page, y);
-    }
 }
 
 
