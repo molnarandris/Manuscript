@@ -56,6 +56,15 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         editor.notify["modified"].connect((s,p) => {
             update_window_title();
         });
+
+        right_pane.synctex_back.connect (synctex_back);
+    }
+
+    private void synctex_back(string path, int p, double x, double y){
+        synctex_engine.synctex_backwards.begin (path, p, x, y, (obj,res) => {
+            var line = synctex_engine.synctex_backwards.end (res);
+            editor.scroll_to(line, 0);
+        });
     }
 
     private void update_window_title () {

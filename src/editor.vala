@@ -145,5 +145,15 @@ public class Manuscript.Editor : Adw.Bin {
 
         return buffer.get_text (start, end, false);
     }
+
+    public void scroll_to (int line, int offset) {
+
+        Gtk.TextIter iter;
+        buffer.get_iter_at_line_offset (out iter, line-1, offset);
+
+        buffer.place_cursor (iter);
+        source_view.scroll_to_iter (iter, 0.2, false, 0.0, 0.0);
+        source_view.grab_focus ();
+    }
 }
 

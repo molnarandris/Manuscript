@@ -5,8 +5,10 @@ class Manuscript.PdfDocument: Object {
     public double height = 0;
     public double width = 0;
     public double[] y_offsets;
+    public string path;
 
     public PdfDocument(string path) throws Error {
+        this.path = path;
         document = new Poppler.Document.from_file ("file://" + path, null);
         n_pages = document.get_n_pages();
         y_offsets = new double[n_pages];

@@ -1,5 +1,7 @@
 public class Manuscript.PdfViewer : Gtk.Widget, Gtk.Scrollable {
 
+    public signal void synctex_back (string path, int p, double x, double y);
+
     private PdfDocument? document;
 
     public int spacing = 5;
@@ -124,6 +126,7 @@ public class Manuscript.PdfViewer : Gtk.Widget, Gtk.Scrollable {
         Gtk.Widget? child = null;
         while ((child = get_first_child () as Gtk.Widget) !=null ) {
             child.unparent ();
+            var page = child as Manuscript.Pdfpage;
         }
     }
 
@@ -140,6 +143,10 @@ public class Manuscript.PdfViewer : Gtk.Widget, Gtk.Scrollable {
         for (int i = 0; i < document.n_pages; i++) {
             var page = new Manuscript.Pdfpage (document.get_page (i));
             page.insert_before (this, null);
+            page.synctex_back.connect ((p,x,y) => {
+                synctex_back(this.document.path, p, x, y);
+                message("Double click at x = %g, y = %g on page %d", x,y,p);
+            });
         }
         configure_adjustments();
     }
@@ -246,12 +253,22 @@ private class Manuscript.Pdfpage : Gtk.Widget {
     }
     public Gee.ArrayList<Graphene.Rect?> synctex_rectangles = new Gee.ArrayList<Graphene.Rect?> ();
 
+    public signal void synctex_back (int p, double x, double y);
+
     public Pdfpage (Poppler.Page page) {
         this.page = page;
     }
 
     construct {
         scale = 1.4;
+        var click_controller = new Gtk.GestureClick ();
+        this.add_controller (click_controller);
+        click_controller.pressed.connect (on_click);
+    }
+
+    private void on_click(int n_press, double x, double y){
+        if (n_press!=2) return;
+        this.synctex_back.emit(index, x/scale, y/scale);
     }
 
     protected override Gtk.SizeRequestMode get_request_mode () {

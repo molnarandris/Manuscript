@@ -8,8 +8,12 @@ public class Manuscript.RightPane : Adw.Bin {
     private unowned Gtk.ListBox error_list;
 
     public signal void error_activated(LogEntry entry);
+    public signal void synctex_back (string path, int p, double x, double y);
 
     construct {
+        pdf_viewer.synctex_back.connect ((path, p, x, y) => {
+            synctex_back(path,p,x,y);
+        });
     }
 
     public void set_path (string path) {
