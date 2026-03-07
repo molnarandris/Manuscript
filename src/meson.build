@@ -11,6 +11,7 @@ manuscript_sources = [
   'latexfile.vala',
   'pdfviewer.vala',
   'pdfdocument.vala',
+  'pdfpage.vala',
 ]
 
 blueprints = custom_target('blueprints',
