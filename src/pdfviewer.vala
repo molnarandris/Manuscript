@@ -106,9 +106,11 @@ public class Manuscript.PdfViewer : Gtk.Widget, Gtk.Scrollable {
         minimum_baseline = -1;
         natural_baseline = -1;
         if (orientation == Gtk.Orientation.HORIZONTAL) {
-            minimum = natural = (int) (document.width * scale);
+            minimum = 0;
+            natural = (int) (document.width * scale);
         } else {
-            minimum = natural = (int) (document.height * scale + document.n_pages * spacing);
+            minimum = 0;
+            natural = (int) (document.height * scale + document.n_pages * spacing);
         }
     }
 
