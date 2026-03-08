@@ -8,8 +8,6 @@ public struct SynctexResult {
 
 public class Manuscript.Synctex : Object {
 
-    Cancellable? synctex_cancellable;
-
     public Synctex () {
         Object();
     }
