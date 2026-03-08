@@ -65,6 +65,11 @@ public class Manuscript.PdfViewer : Gtk.Widget, Gtk.Scrollable {
     }
 
     private Gtk.Allocation get_page_extent(int index) {
+        if (document == null) {
+            Gtk.Allocation extent = {0, 0, 0, 0};
+            return extent;
+        }
+
         var page = document.get_page(index);
         double w, h;
         page.get_size (out w, out h);
@@ -77,6 +82,11 @@ public class Manuscript.PdfViewer : Gtk.Widget, Gtk.Scrollable {
     }
 
     public override void size_allocate (int width, int height, int baseline) {
+        if (document == null) {
+            base.size_allocate (width, height, baseline);
+            return;
+        }
+
         hadjustment.freeze_notify ();
         vadjustment.freeze_notify ();
 
@@ -105,6 +115,11 @@ public class Manuscript.PdfViewer : Gtk.Widget, Gtk.Scrollable {
                                   out int minimum_baseline, out int natural_baseline) {
         minimum_baseline = -1;
         natural_baseline = -1;
+        if (document == null) {
+            minimum = 0;
+            natural = 0;
+            return;
+        }
         if (orientation == Gtk.Orientation.HORIZONTAL) {
             minimum = 0;
             natural = (int) (document.width * scale);
@@ -128,7 +143,6 @@ public class Manuscript.PdfViewer : Gtk.Widget, Gtk.Scrollable {
         Gtk.Widget? child = null;
         while ((child = get_first_child () as Gtk.Widget) !=null ) {
             child.unparent ();
-            var page = child as Manuscript.Pdfpage;
         }
     }
 
@@ -154,6 +168,8 @@ public class Manuscript.PdfViewer : Gtk.Widget, Gtk.Scrollable {
     }
 
     private void configure_adjustments() {
+        if (document == null) return;
+
         double val, lower, upper, step_increment, page_increment, page_size;
         double allocated_width = this.get_width();
         double allocated_height = this.get_height();
@@ -209,20 +225,30 @@ public class Manuscript.PdfViewer : Gtk.Widget, Gtk.Scrollable {
     }
 
     public void add_synctex_rectangles (Gee.HashMap<int, Gee.ArrayList<Graphene.Rect?>> synctex_results) {
+        if (document == null) return;
+        if (synctex_results.size == 0) return;
+
+        var pages = new Gee.ArrayList<Manuscript.Pdfpage> ();
+        for (var child = get_first_child (); child != null; child = child.get_next_sibling ()) {
+            var page = child as Manuscript.Pdfpage;
+            if (page != null)
+                pages.add (page);
+        }
 
         var min_page = int.MAX;
         foreach (var page_num in synctex_results.keys) {
-            if (min_page < 0) min_page = page_num;
             min_page = page_num < min_page ? page_num : min_page;
             var list = synctex_results.get (page_num);
-            var page = get_first_child () as Manuscript.Pdfpage;
-            for (int i = 0; i < page_num; i++) {
-                page = page.get_next_sibling ()  as Manuscript.Pdfpage;
-            }
-            page.add_synctex_rectangles (list);
+            if (list == null)
+                continue;
+            if (page_num >= 0 && page_num < pages.size)
+                pages.get (page_num).add_synctex_rectangles (list);
         }
+
         if (min_page == int.MAX) return;
         var list = synctex_results.get (min_page);
+        if (list == null) return;
+
         var min_y = float.MAX;
         foreach (var rect in list) {
             min_y = rect.origin.y < min_y ? rect.origin.y : min_y;
@@ -232,6 +258,7 @@ public class Manuscript.PdfViewer : Gtk.Widget, Gtk.Scrollable {
     }
 
     public void scroll_to (int p, float y) {
+        if (document == null) return;
         vadjustment.set_value ((document.y_offsets[p] + y)*scale - get_height () * 0.3);
     }
 
