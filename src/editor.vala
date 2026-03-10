@@ -10,6 +10,12 @@ public class Manuscript.Editor : Adw.Bin {
     private Gtk.FileDialog file_dialog = new Gtk.FileDialog ();
     private GtkSource.Buffer buffer;
 
+    private Gee.HashMap<string,string> latex_to_unicode;
+    private Gee.HashMap<string,string> unicode_to_latex;
+
+    bool internal_edit = false; // prevent recursion
+
+
     construct {
         buffer = source_view.buffer as GtkSource.Buffer;
 
@@ -42,8 +48,134 @@ public class Manuscript.Editor : Adw.Bin {
         buffer.modified_changed.connect(() => {
             modified = buffer.get_modified();
         });
+        buffer.insert_text.connect(on_insert_text);
 
         banner.button_clicked.connect (on_banner_button_clicked);
+
+        latex_to_unicode = new Gee.HashMap<string,string> ();
+
+        latex_to_unicode["\\alpha"]   = "α";
+        latex_to_unicode["\\beta"]    = "β";
+        latex_to_unicode["\\gamma"]   = "γ";
+        latex_to_unicode["\\delta"]   = "δ";
+        latex_to_unicode["\\epsilon"] = "ε";
+        latex_to_unicode["\\zeta"]    = "ζ";
+        latex_to_unicode["\\eta"]     = "η";
+        latex_to_unicode["\\theta"]   = "θ";
+        latex_to_unicode["\\iota"]    = "ι";
+        latex_to_unicode["\\kappa"]   = "κ";
+        latex_to_unicode["\\lambda"]  = "λ";
+        latex_to_unicode["\\mu"]      = "μ";
+        latex_to_unicode["\\nu"]      = "ν";
+        latex_to_unicode["\\xi"]      = "ξ";
+        latex_to_unicode["\\omicron"] = "ο";
+        latex_to_unicode["\\pi"]      = "π";
+        latex_to_unicode["\\rho"]     = "ρ";
+        latex_to_unicode["\\sigma"]   = "σ";
+        latex_to_unicode["\\tau"]     = "τ";
+        latex_to_unicode["\\upsilon"] = "υ";
+        latex_to_unicode["\\phi"]     = "φ";
+        latex_to_unicode["\\chi"]     = "χ";
+        latex_to_unicode["\\psi"]     = "ψ";
+        latex_to_unicode["\\omega"]   = "ω";
+
+        // uppercase
+        latex_to_unicode["\\Gamma"]   = "Γ";
+        latex_to_unicode["\\Delta"]   = "Δ";
+        latex_to_unicode["\\Theta"]   = "Θ";
+        latex_to_unicode["\\Lambda"]  = "Λ";
+        latex_to_unicode["\\Xi"]      = "Ξ";
+        latex_to_unicode["\\Pi"]      = "Π";
+        latex_to_unicode["\\Sigma"]   = "Σ";
+        latex_to_unicode["\\Upsilon"] = "Υ";
+        latex_to_unicode["\\Phi"]     = "Φ";
+        latex_to_unicode["\\Psi"]     = "Ψ";
+        latex_to_unicode["\\Omega"]   = "Ω";
+
+        // symbols
+        latex_to_unicode["\\otimes"] = "⊗";
+        latex_to_unicode["\\oplus"]   = "⊕";
+        latex_to_unicode["\\boxedtimes"]   = "⊠";
+
+
+        // calligraphic uppercase
+        latex_to_unicode["\\mathcal{A}"] = "𝒜"; // U+1D49C
+        latex_to_unicode["\\mathcal{B}"] = "ℬ"; // U+212C (standard)
+        latex_to_unicode["\\mathcal{C}"] = "𝒞"; // U+1D49E
+        latex_to_unicode["\\mathcal{D}"] = "𝒟"; // U+1D49F
+        latex_to_unicode["\\mathcal{E}"] = "ℰ"; // U+2130
+        latex_to_unicode["\\mathcal{F}"] = "ℱ"; // U+2131
+        latex_to_unicode["\\mathcal{G}"] = "𝒢"; // U+1D4A2
+        latex_to_unicode["\\mathcal{H}"] = "ℋ"; // U+210B
+        latex_to_unicode["\\mathcal{I}"] = "ℐ"; // U+2110
+        latex_to_unicode["\\mathcal{J}"] = "𝒥"; // U+1D4A5
+        latex_to_unicode["\\mathcal{K}"] = "𝒦"; // U+1D4A6
+        latex_to_unicode["\\mathcal{L}"] = "ℒ"; // U+2112
+        latex_to_unicode["\\mathcal{M}"] = "ℳ"; // U+2133
+        latex_to_unicode["\\mathcal{N}"] = "𝒩"; // U+1D4AB
+        latex_to_unicode["\\mathcal{O}"] = "𝒪"; // U+1D4AC
+        latex_to_unicode["\\mathcal{P}"] = "𝒫"; // U+1D4AD
+        latex_to_unicode["\\mathcal{Q}"] = "𝒬"; // U+1D4AE
+        latex_to_unicode["\\mathcal{R}"] = "ℛ"; // U+211B
+        latex_to_unicode["\\mathcal{S}"] = "𝒮"; // U+1D4B0
+        latex_to_unicode["\\mathcal{T}"] = "𝒯"; // U+1D4B1
+        latex_to_unicode["\\mathcal{U}"] = "𝒰"; // U+1D4B2
+        latex_to_unicode["\\mathcal{V}"] = "𝒱"; // U+1D4B3
+        latex_to_unicode["\\mathcal{W}"] = "𝒲"; // U+1D4B4
+        latex_to_unicode["\\mathcal{X}"] = "𝒳"; // U+1D4B5
+        latex_to_unicode["\\mathcal{Y}"] = "𝒴"; // U+1D4B6
+        latex_to_unicode["\\mathcal{Z}"] = "𝒵"; // U+1D4B7
+
+        // common math symbols
+        latex_to_unicode["\\in"]      = "∈";  // U+2208
+        latex_to_unicode["\\notin"]   = "∉";  // U+2209
+        latex_to_unicode["\\cdot"]    = "⋅";  // U+22C5
+        latex_to_unicode["\\mapsto"]  = "↦";  // U+21A6
+        latex_to_unicode["\\to"]      = "→";  // U+2192
+        latex_to_unicode["\\Rightarrow"] = "⇒"; // U+21D2
+        latex_to_unicode["\\leftarrow"]  = "←"; // U+2190
+        latex_to_unicode["\\Leftarrow"]  = "⇐"; // U+21D0
+
+
+
+        unicode_to_latex = new Gee.HashMap<string,string>();
+        foreach (var k in latex_to_unicode.keys)
+            unicode_to_latex[latex_to_unicode[k]] = k;
+    }
+
+
+    private void on_insert_text (Gtk.TextBuffer buffer,
+                                 Gtk.TextIter location,
+                                 string text,
+                                 int length)
+    {
+        if (internal_edit)
+            return;
+
+        internal_edit = true;
+
+        // Iterate over all LaTeX → Unicode mappings
+        foreach (var k in latex_to_unicode.keys) {
+            int len = k.length;
+            Gtk.TextIter start = location;
+
+            // Move start back by length of LaTeX command
+            if (!start.backward_chars(len))
+                continue;
+
+            string recent = buffer.get_text(start, location, false);
+
+            if (recent == k) {
+                // Replace LaTeX with Unicode
+                buffer.delete(ref start, ref location);
+                buffer.insert(ref start, latex_to_unicode[k], -1);
+
+                // Adjust location for next iterations
+                break; // only replace one match at a time
+            }
+        }
+
+        internal_edit = false;
     }
 
     public void goto_log_entry(LogEntry entry) {
@@ -99,8 +231,16 @@ public class Manuscript.Editor : Adw.Bin {
         });
     }
 
+    private string replace_latex_by_unicode(string input) {
+        string text = input;
+        foreach (var k in latex_to_unicode.keys) {
+            text = text.replace(k, latex_to_unicode[k]);
+        }
+        return text;
+    }
+
     private void set_text(string contents) {
-        buffer.text = contents;
+        buffer.text = replace_latex_by_unicode(contents);
         Gtk.TextIter start;
         buffer.get_start_iter (out start);
         buffer.place_cursor (start);
@@ -128,8 +268,17 @@ public class Manuscript.Editor : Adw.Bin {
         yield save_file (new LatexFile(file_to_save));
     }
 
+    public string normalize_buffer_for_saving(string input) {
+        string text = input;
+        foreach (var u in unicode_to_latex.keys) {
+            text = text.replace(u, unicode_to_latex[u]);
+        }
+        return text;
+    }
+
     private async void save_file (LatexFile file_to_save)  throws Error {
         var text = get_text ();
+        text = normalize_buffer_for_saving(text);
 
         yield file_to_save.replace_contents (text);
 
