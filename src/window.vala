@@ -25,7 +25,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
     [GtkChild]
     private unowned Gtk.Button compile_button;
     [GtkChild]
-    private unowned Manuscript.RightPane right_pane;
+    private unowned Manuscript.PdfPane pdf_pane;
     [GtkChild]
     private unowned Manuscript.Editor editor;
 
@@ -47,17 +47,17 @@ public class Manuscript.Window : Adw.ApplicationWindow {
 
         add_action_entries (actions, this);
 
-        right_pane.error_activated.connect (editor.goto_log_entry);
+        pdf_pane.error_activated.connect (editor.goto_log_entry);
         editor.notify["file"].connect((s,p) => {
             update_window_title ();
             update_compiler_state ();
-            update_right_pane ();
+            update_pdf_pane ();
         });
         editor.notify["modified"].connect((s,p) => {
             update_window_title();
         });
 
-        right_pane.synctex_back.connect (synctex_back);
+        pdf_pane.synctex_back.connect (synctex_back);
     }
 
     private void synctex_back(string path, int p, double x, double y){
@@ -90,12 +90,12 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         compiler.dir  = editor.file.dir;
     }
 
-    private void update_right_pane () {
+    private void update_pdf_pane () {
         if (editor.file == null)
             return;
 
         var pdf = editor.file.path.replace (".tex", ".pdf");
-        right_pane.set_path (pdf);
+        pdf_pane.set_path (pdf);
     }
 
     private async void open_async () {
@@ -148,7 +148,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
         }
 
         compile_button.set_icon_name ("media-playback-stop-symbolic");
-        right_pane.remove_log_entries ();
+        pdf_pane.remove_log_entries ();
 
         CompilationResult compilation_result;
         try {
@@ -163,9 +163,9 @@ public class Manuscript.Window : Adw.ApplicationWindow {
 
         if (compilation_result.success) {
             string filename = editor.file.path.replace (".tex", ".pdf");
-            right_pane.set_path (filename);
+            pdf_pane.set_path (filename);
         } else {
-            right_pane.set_error (compilation_result.log);
+            pdf_pane.set_error (compilation_result.log);
         }
     }
 
@@ -183,7 +183,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
             return;
         }
 
-        right_pane.add_synctex_rectangles (synctex_results);
+        pdf_pane.add_synctex_rectangles (synctex_results);
     }
 }
 

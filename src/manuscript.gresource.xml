@@ -3,7 +3,7 @@
   <gresource prefix="/com/github/molnarandris/manuscript">
     <file preprocess="xml-stripblanks">window.ui</file>
     <file preprocess="xml-stripblanks">shortcuts-dialog.ui</file>
-    <file preprocess="xml-stripblanks">right-pane.ui</file>
+    <file preprocess="xml-stripblanks">pdfpane.ui</file>
     <file preprocess="xml-stripblanks">editor.ui</file>
     <file preprocess="xml-stripblanks">preferences-dialog.ui</file>
     <file compressed="true" alias="style.css">../data/css/style.css</file>
