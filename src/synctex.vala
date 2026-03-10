@@ -75,35 +75,4 @@ public class Manuscript.Synctex : Object {
         return rects_by_page;
     }
 
-    public async int synctex_backwards(string path, int page, double x, double y) throws Error {
-        Subprocess proc;
-        var position = string.join(":", (page +1).to_string(), x.to_string(), y.to_string(), path);
-        try{
-            // watch-bus required to cancel
-            proc = new Subprocess (SubprocessFlags.SEARCH_PATH_FROM_ENVP|
-                                   SubprocessFlags.STDOUT_PIPE|
-                                   SubprocessFlags.STDERR_PIPE,
-                                   "flatpak-spawn", "--host", "--watch-bus",
-                                   "synctex", "edit",
-                                   "-o", position);
-        } catch (Error e) {
-            stderr.printf ("Synctex spawn error: %s\n", e.message);
-            throw e;
-        }
-
-        string stdout, stderr;
-        try {
-            yield proc.communicate_utf8_async (null, null, out stdout, out stderr);
-        } catch (Error e) {
-            message("Synctex failed: %s", e.message);
-            throw e;
-        }
-
-        var regex = new Regex ("^Line:(\\d+)$", RegexCompileFlags.MULTILINE);
-
-        MatchInfo match;
-        regex.match (stdout, 0, out match);
-        return int.parse (match.fetch (1));
-    }
-
 }
