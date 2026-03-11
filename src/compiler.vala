@@ -108,21 +108,40 @@ public class Manuscript.Compiler : Object {
             return entries;
         }
         try {
-            var error_re = new Regex("! (.+?)\\nl\\.(\\d+) (.+?)\\n");
-            MatchInfo match_info;
-            var success = error_re.match (log_text, 0, out match_info);
-            if (!success) return entries;
-            var location = SourceLocation () {
-                    file = path,
-                    line = int.parse (match_info.fetch (2)),
-                    hint = match_info.fetch(3)
-            };
+            var lines = log_text.split ("\n");
+            var error_re = new Regex ("^[ \t]*!(.*)$");
+            var line_re = new Regex ("^\\s*l\\.(\\d+)\\s*(.*)$", RegexCompileFlags.MULTILINE);
 
-            entries += LogEntry () {
-                type = LogType.ERROR,
-                message = match_info.fetch (1),
-                location =  location
-            };
+            for (uint i = 0; i < lines.length; i++) {
+                MatchInfo error_match;
+                if (!error_re.match (lines[i], 0, out error_match))
+                    continue;
+
+                var message = trim_string (error_match.fetch (1));
+
+                // Find the next "l.<line> ..." line (TeX reports the line after the error).
+                for (uint j = i + 1; j < lines.length; j++) {
+                    MatchInfo match_info;
+                    if (!line_re.match (lines[j], 0, out match_info))
+                        continue;
+
+                    var line_no = int.parse (match_info.fetch (1));
+                    var hint = match_info.fetch (2);
+
+                    var location = SourceLocation () {
+                        file = path,
+                        line = line_no,
+                        hint = hint
+                    };
+
+                    entries += LogEntry () {
+                        type = LogType.ERROR,
+                        message = message,
+                        location = location
+                    };
+                    break;
+                }
+            }
         } catch (Error e) {
             message ("Regex error in log parser: %s", e.message);
             return entries;
@@ -130,6 +149,14 @@ public class Manuscript.Compiler : Object {
         return entries;
     }
 
+    private string trim_string (string s) {
+        try {
+            var re = new Regex ("(^\\s+)|(\\s+$)");
+            return re.replace (s, 0, 0, "", 0);
+        } catch (Error e) {
+            return s;
+        }
+    }
 
 }
 
