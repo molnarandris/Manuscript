@@ -148,6 +148,8 @@ public class Manuscript.Window : Adw.ApplicationWindow {
 
         compile_button.set_icon_name ("media-playback-stop-symbolic");
         pdf_pane.remove_log_entries ();
+        if (pdf_pane.is_on_error_page ())
+            pdf_pane.set_compiling ();
 
         CompilationResult compilation_result;
         try {

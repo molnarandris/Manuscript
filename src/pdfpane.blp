@@ -12,6 +12,14 @@ template $ManuscriptPdfPane: Adw.Bin {
             };
           }
         Adw.ViewStackPage {
+            title: _("Compiling");
+            name: "compiling";
+            child: Adw.StatusPage {
+                title: _("Compiling...");
+                description: _("Please wait while the document is being compiled.");
+            };
+          }
+        Adw.ViewStackPage {
             title: _("Eror");
             name: "error";
             child: Adw.StatusPage {

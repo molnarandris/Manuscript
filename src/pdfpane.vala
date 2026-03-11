@@ -27,6 +27,14 @@ public class Manuscript.PdfPane : Adw.Bin {
         error_list.remove_all ();
     }
 
+    public void set_compiling () {
+        stack.set_visible_child_name ("compiling");
+    }
+
+    public bool is_on_error_page () {
+        return stack.get_visible_child_name () == "error";
+    }
+
     public void set_error (LogEntry[] log_entries) {
         stack.set_visible_child_name ("error");
         foreach (var entry in log_entries) {
