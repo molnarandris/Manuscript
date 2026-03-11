@@ -92,12 +92,6 @@ public class Manuscript.Editor : Adw.Bin {
         latex_to_unicode["\\Psi"]     = "Ψ";
         latex_to_unicode["\\Omega"]   = "Ω";
 
-        // symbols
-        latex_to_unicode["\\otimes"] = "⊗";
-        latex_to_unicode["\\oplus"]   = "⊕";
-        latex_to_unicode["\\boxedtimes"]   = "⊠";
-
-
         // calligraphic uppercase
         latex_to_unicode["\\mathcal{A}"] = "𝒜"; // U+1D49C
         latex_to_unicode["\\mathcal{B}"] = "ℬ"; // U+212C (standard)
@@ -126,15 +120,39 @@ public class Manuscript.Editor : Adw.Bin {
         latex_to_unicode["\\mathcal{Y}"] = "𝒴"; // U+1D4B6
         latex_to_unicode["\\mathcal{Z}"] = "𝒵"; // U+1D4B7
 
+        // blackboard-bold (mathbb) -- only the commonly defined Unicode symbols
+        latex_to_unicode["\\mathbb{C}"] = "ℂ";
+        latex_to_unicode["\\mathbb{H}"] = "ℍ";
+        latex_to_unicode["\\mathbb{N}"] = "ℕ";
+        latex_to_unicode["\\mathbb{P}"] = "ℙ";
+        latex_to_unicode["\\mathbb{Q}"] = "ℚ";
+        latex_to_unicode["\\mathbb{R}"] = "ℝ";
+        latex_to_unicode["\\mathbb{Z}"] = "ℤ";
+
         // common math symbols
         latex_to_unicode["\\in"]      = "∈";  // U+2208
         latex_to_unicode["\\notin"]   = "∉";  // U+2209
         latex_to_unicode["\\cdot"]    = "⋅";  // U+22C5
         latex_to_unicode["\\mapsto"]  = "↦";  // U+21A6
         latex_to_unicode["\\to"]      = "→";  // U+2192
+        latex_to_unicode["\\rightarrow"] = "→"; // alternative to \to
         latex_to_unicode["\\Rightarrow"] = "⇒"; // U+21D2
         latex_to_unicode["\\leftarrow"]  = "←"; // U+2190
         latex_to_unicode["\\Leftarrow"]  = "⇐"; // U+21D0
+        latex_to_unicode["\\otimes"] = "⊗";
+        latex_to_unicode["\\oplus"]   = "⊕";
+        latex_to_unicode["\\boxtimes"]   = "⊠";
+        latex_to_unicode["\\circ"] = "∘";
+        latex_to_unicode["\\subset"] = "⊂";
+        latex_to_unicode["\\subseteq"] = "⊆";
+        latex_to_unicode["\\cap"] = "∩";
+        latex_to_unicode["\\cup"] = "∪";
+        latex_to_unicode["\\simeq"] = "≈";
+        latex_to_unicode["\\partial"] = "∂";
+        latex_to_unicode["\\forall"] = "∀";
+        latex_to_unicode["\\exists"] = "∃";
+        latex_to_unicode["\\emptyset"] = "∅";
+
 
 
 
