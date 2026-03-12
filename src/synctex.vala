@@ -1,19 +1,4 @@
-public struct SynctexResult {
-    int page;
-    double x;
-    double y;
-    double width;
-    double height;
-}
-
 public class Manuscript.Synctex : Object {
-
-    public Synctex () {
-        Object ();
-    }
-
-    construct {
-    }
 
     private string get_position_string (SourceLocation source) {
         return source.line.to_string ("%i") + ":" +
@@ -41,18 +26,17 @@ public class Manuscript.Synctex : Object {
             throw e;
         }
 
-        string stdout, stderr;
+        string stdout_buf, stderr_buf;
         try {
-            yield proc.communicate_utf8_async (null, null, out stdout, out stderr);
+            yield proc.communicate_utf8_async (null, null, out stdout_buf, out stderr_buf);
         } catch (Error e) {
             message ("Synctex failed: %s", e.message);
             throw e;
         }
         try {
-            Regex record;
+            var record = new Regex ("Page:(.*)\n.*\n.*\nh:(.*)\nv:(.*)\nW:(.*)\nH:(.*)");
             MatchInfo match_info;
-            record = new Regex ("Page:(.*)\n.*\n.*\nh:(.*)\nv:(.*)\nW:(.*)\nH:(.*)");
-            record.match (stdout, 0, out match_info);
+            record.match (stdout_buf, 0, out match_info);
             do {
                 var page = int.parse (match_info.fetch (1)) - 1;
                 var rect = Graphene.Rect ();
