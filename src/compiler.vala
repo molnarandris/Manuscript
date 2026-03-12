@@ -33,10 +33,6 @@ public class Manuscript.Compiler : Object {
         Object ();
     }
 
-    construct {
-
-    }
-
     public async CompilationResult compile () throws Error {
         assert (path != null);
         assert (dir != null);
