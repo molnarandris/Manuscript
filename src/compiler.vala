@@ -117,7 +117,7 @@ public class Manuscript.Compiler : Object {
                 if (!error_re.match (lines[i], 0, out error_match))
                     continue;
 
-                var message = trim_string (error_match.fetch (1));
+                var message = error_match.fetch (1).strip ();
 
                 // Find the next "l.<line> ..." line (TeX reports the line after the error).
                 for (uint j = i + 1; j < lines.length; j++) {
@@ -147,15 +147,6 @@ public class Manuscript.Compiler : Object {
             return entries;
         }
         return entries;
-    }
-
-    private string trim_string (string s) {
-        try {
-            var re = new Regex ("(^\\s+)|(\\s+$)");
-            return re.replace (s, 0, 0, "", 0);
-        } catch (Error e) {
-            return s;
-        }
     }
 
 }
