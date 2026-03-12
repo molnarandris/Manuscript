@@ -313,7 +313,10 @@ public class Manuscript.Editor : Adw.Bin {
         return buffer.get_text (start, end, false);
     }
 
-    public void scroll_to (int line, int offset) {
+    public void scroll_to (SourceLocation location) {
+
+        int line = location.line;
+        int offset = location.offset;
 
         Gtk.TextIter iter;
         buffer.get_iter_at_line_offset (out iter, line-1, offset);

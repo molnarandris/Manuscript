@@ -57,13 +57,7 @@ public class Manuscript.Window : Adw.ApplicationWindow {
             update_window_title();
         });
 
-        pdf_pane.synctex_back.connect (synctex_back);
-    }
-
-    private void synctex_back(SourceLocation? loc){
-        if (loc != null) {
-            editor.scroll_to(loc.line, 0);
-        }
+        pdf_pane.synctex_back.connect (editor.scroll_to);
     }
 
     private void update_window_title () {

@@ -8,7 +8,7 @@ public class Manuscript.PdfPane : Adw.Bin {
     private unowned Gtk.ListBox error_list;
 
     public signal void error_activated(LogEntry entry);
-    public signal void synctex_back (SourceLocation? location);
+    public signal void synctex_back (SourceLocation location);
 
     construct {
         pdf_viewer.synctex_back.connect (on_synctex_backwards);
@@ -65,7 +65,7 @@ public class Manuscript.PdfPane : Adw.Bin {
         run_synctex.begin (position, (obj, res) => {
             try {
                 var location = run_synctex.end (res);
-                this.synctex_back.emit (location);
+                if (location!=null) this.synctex_back.emit (location);
             } catch (Error e) {
                 warning ("Synctex callback error: %s", e.message);
             }
@@ -109,6 +109,9 @@ public class Manuscript.PdfPane : Adw.Bin {
 
             var location = SourceLocation ();
             location.line = int.parse (match.fetch (1));
+            location.offset = 0;
+            location.file = "";
+            location.hint = "";
 
             return location;
         } catch (Error e) {
