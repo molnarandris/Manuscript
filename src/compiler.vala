@@ -16,7 +16,7 @@ public struct SourceLocation {
     public string? hint;
 }
 
-public enum LogType{
+public enum LogType {
     ERROR,
     WARNING,
     BADBOX,
@@ -26,27 +26,27 @@ public enum LogType{
 public class Manuscript.Compiler : Object {
 
     Cancellable? compile_cancellable = null;
-    public string? path {get; set; default = null;}
-    public string? dir {get; set; default = null;}
+    public string? path { get; set; default = null; }
+    public string? dir { get; set; default = null; }
 
     public Compiler () {
-        Object();
+        Object ();
     }
 
-   construct {
+    construct {
 
     }
 
-    public async CompilationResult compile() throws Error {
-        assert(path != null);
-        assert(dir != null);
+    public async CompilationResult compile () throws Error {
+        assert (path != null);
+        assert (dir != null);
 
         if (compile_cancellable != null) {
             compile_cancellable.cancel ();
         }
 
         Subprocess proc;
-        try{
+        try {
             // watch-bus required to cancel mklatex
             proc = new Subprocess (SubprocessFlags.SEARCH_PATH_FROM_ENVP,
                                    "flatpak-spawn",
@@ -72,28 +72,28 @@ public class Manuscript.Compiler : Object {
             if (e is IOError.CANCELLED) {
                 // We need to force exit because of flatpak?
                 proc.force_exit ();
-                message("mklatex cancelled");
+                message ("mklatex cancelled");
                 throw e;
             } else {
-                message("mklatex failed");
-                var entries = yield parse_log();
-                return CompilationResult () { success = false, log = entries};
+                message ("mklatex failed");
+                var entries = yield parse_log ();
+                return CompilationResult () { success = false, log = entries };
             }
         }
         compile_cancellable = null;
-        var entries = yield parse_log();
-        return CompilationResult () { success = true, log = entries};
+        var entries = yield parse_log ();
+        return CompilationResult () { success = true, log = entries };
     }
 
     public async LogEntry[] parse_log () {
-        assert(path != null);
-        assert(dir!= null);
+        assert (path != null);
+        assert (dir != null);
         var entries = new LogEntry[0];
         var log_path = path.replace (".tex", ".log");
-        var log_file = File.new_for_path(log_path);
+        var log_file = File.new_for_path (log_path);
         uint8[] contents;
         try {
-            yield log_file.load_contents_async(null, out contents, null);
+            yield log_file.load_contents_async (null, out contents, null);
         } catch (Error e) {
             stderr.printf ("Unable to open the log file “%s“: %s",
                            log_path,
